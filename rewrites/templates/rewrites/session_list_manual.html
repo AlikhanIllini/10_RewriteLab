@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} | RewriteLab{% endblock %}
+
+{% block content %}
+<h2>{{ title }}</h2>
+
+<div class="view-type">
+    <strong>View Type:</strong> {{ view_type }}
+    <br>
+    <small>This template is loaded manually using <code>loader.get_template()</code> and rendered with <code>HttpResponse</code></small>
+</div>
+
+<div class="card">
+    <h2>Rewrite Sessions (Limited to 5)</h2>
+
+    {% for session in sessions %}
+    <div class="session-item">
+        <div class="text-preview">
+            <a href="{% url 'rewrites:session_detail' session.pk %}">
+                {{ session.original_text|truncatewords:25 }}
+            </a>
+        </div>
+        <div class="session-meta">
+            <span class="badge badge-context">{{ session.context.name }}</span>
+            <span class="badge badge-tone">{{ session.tone.name }}</span>
+            {% if session.is_completed %}
+            <span class="badge badge-completed">✓ Completed</span>
+            {% else %}
+            <span class="badge badge-pending">⏳ Pending</span>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <h3>No Sessions Available</h3>
+        <p>The database is empty. Add some sessions via the admin panel.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="card" style="background: #f7fafc; border: 1px solid #e2e8f0;">
+    <h2>About This View</h2>
+    <p>This view demonstrates the <strong>manual approach</strong> to rendering templates:</p>
+    <pre style="background: #2d3748; color: #e2e8f0; padding: 1rem; border-radius: 4px; overflow-x: auto;">
+template = loader.get_template('rewrites/session_list_manual.html')
+context = {'sessions': sessions, ...}
+return HttpResponse(template.render(context, request))</pre>
+</div>
+{% endblock %}

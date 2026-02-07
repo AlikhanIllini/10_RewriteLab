@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Home | RewriteLab{% endblock %}
+
+{% block content %}
+<h2>Welcome to RewriteLab</h2>
+
+<p style="font-size: 1.1rem; color: #4a5568; margin-bottom: 2rem;">
+    RewriteLab helps you improve professional and academic writing by generating
+    high-quality rewrite examples of your text.
+</p>
+
+<div class="stats">
+    <div class="stat-card">
+        <div class="stat-value">{{ session_count }}</div>
+        <div class="stat-label">Rewrite Sessions</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ context_count }}</div>
+        <div class="stat-label">Writing Contexts</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ tone_count }}</div>
+        <div class="stat-label">Tone Options</div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>View Types Demo</h2>
+    <p>This project demonstrates four different Django view patterns:</p>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem;">
+        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
+            <h3 style="color: #667eea;">1. HttpResponse FBV</h3>
+            <p style="font-size: 0.875rem; color: #718096;">Manual template loading with loader.get_template()</p>
+            <a href="{% url 'rewrites:session_manual' %}">View Demo →</a>
+        </div>
+
+        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
+            <h3 style="color: #667eea;">2. render() FBV</h3>
+            <p style="font-size: 0.875rem; color: #718096;">Shortcut function for cleaner code</p>
+            <a href="{% url 'rewrites:session_render' %}">View Demo →</a>
+        </div>
+
+        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
+            <h3 style="color: #667eea;">3. Base CBV</h3>
+            <p style="font-size: 0.875rem; color: #718096;">Class-based view inheriting from View</p>
+            <a href="{% url 'rewrites:session_cbv_base' %}">View Demo →</a>
+        </div>
+
+        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
+            <h3 style="color: #667eea;">4. Generic ListView</h3>
+            <p style="font-size: 0.875rem; color: #718096;">Django's built-in generic view</p>
+            <a href="{% url 'rewrites:session_cbv_generic' %}">View Demo →</a>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="background: #f7fafc;">
+    <h2>Quick Links</h2>
+    <ul style="list-style: none; padding: 0;">
+        <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
+            <a href="{% url 'admin:index' %}">🔐 Django Admin Panel</a>
+        </li>
+        <li style="padding: 0.5rem 0;">
+            <a href="{% url 'rewrites:session_cbv_generic' %}">📝 View All Sessions</a>
+        </li>
+    </ul>
+</div>
+{% endblock %}

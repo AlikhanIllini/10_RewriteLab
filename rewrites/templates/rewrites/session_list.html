@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} | RewriteLab{% endblock %}
+
+{% block content %}
+<h2>{{ title }}</h2>
+
+{% if view_type %}
+<div class="view-type">
+    <strong>View Type:</strong> {{ view_type }}
+</div>
+{% endif %}
+
+{% if completed_count is not None or context_count is not None or total_results is not None %}
+<div class="stats">
+    {% if context_count is not None %}
+    <div class="stat-card">
+        <div class="stat-value">{{ context_count }}</div>
+        <div class="stat-label">Contexts</div>
+    </div>
+    {% endif %}
+    {% if tone_count is not None %}
+    <div class="stat-card">
+        <div class="stat-value">{{ tone_count }}</div>
+        <div class="stat-label">Tones</div>
+    </div>
+    {% endif %}
+    {% if completed_count is not None %}
+    <div class="stat-card">
+        <div class="stat-value">{{ completed_count }}</div>
+        <div class="stat-label">Completed</div>
+    </div>
+    {% endif %}
+    {% if pending_count is not None %}
+    <div class="stat-card">
+        <div class="stat-value">{{ pending_count }}</div>
+        <div class="stat-label">Pending</div>
+    </div>
+    {% endif %}
+    {% if total_results is not None %}
+    <div class="stat-card">
+        <div class="stat-value">{{ total_results }}</div>
+        <div class="stat-label">Total Results</div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<div class="card">
+    <h2>Rewrite Sessions</h2>
+
+    {% for session in sessions %}
+    <div class="session-item">
+        <div class="text-preview">
+            <a href="{% url 'rewrites:session_detail' session.pk %}">
+                {{ session.original_text|truncatewords:30 }}
+            </a>
+        </div>
+        <div class="session-meta">
+            <span class="badge badge-context">{{ session.context.name }}</span>
+            <span class="badge badge-tone">{{ session.tone.name }}</span>
+            {% if session.is_completed %}
+            <span class="badge badge-completed">✓ Completed</span>
+            {% else %}
+            <span class="badge badge-pending">⏳ Pending</span>
+            {% endif %}
+            {% if session.audience %}
+            <span>Audience: {{ session.audience }}</span>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <h3>No Rewrite Sessions Found</h3>
+        <p>There are no rewrite sessions in the database yet.</p>
+        <p>Go to the <a href="{% url 'admin:index' %}">Admin Panel</a> to create some!</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
