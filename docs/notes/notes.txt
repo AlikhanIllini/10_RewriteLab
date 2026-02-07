@@ -1,0 +1,79 @@
+# RewriteLab - Project Notes
+
+## Weekly Progress Updates
+
+### Week 1 (Initial Setup)
+**Date:** February 2026
+
+**Completed:**
+- Django project initialized with `rewritelab_project` as project name
+- Created `rewrites` app for core rewriting functionality
+- Defined 4 database models:
+  - `RewriteContext`: Writing context categories (Professional Email, Academic, etc.)
+  - `ToneOption`: Tone/style options (Clear, Polite, Professional)
+  - `RewriteSession`: Main table for rewrite requests
+  - `RewriteResult`: Generated rewrite alternatives
+- Implemented relationships with proper `on_delete` behavior:
+  - PROTECT for Context/Tone → Session (prevent accidental deletion)
+  - CASCADE for Session → Result (cleanup orphaned results)
+- Added UniqueConstraints to prevent duplicate submissions
+- Seeded test data: 4 contexts, 5 tones, 8 sessions, 15 results
+- Created ER diagram documentation
+
+**Challenges:**
+- Terminal output was suppressed in some commands, had to use file-based verification
+- Needed to use `python3` instead of `python` for Python 3.13 compatibility
+
+---
+
+### Week 2 (Project Foundations + Views + Templates)
+**Date:** February 2026
+
+**Completed:**
+- Implemented split settings pattern (base.py, development.py, production.py)
+- Configured environment variables with python-dotenv
+- Created .env and .env.example files for secure key management
+- Set up proper .gitignore to exclude sensitive files
+- Restructured docs folder: wireframes, branching_strategy, notes
+- Implemented 4 types of views:
+  1. FBV with HttpResponse (manual template loading)
+  2. FBV with render() shortcut
+  3. CBV inheriting from View
+  4. Generic CBV (ListView)
+- Created base template with block inheritance
+- Implemented list template with {% for %} and {% empty %}
+
+**Notes for Grading:**
+- View 1 (HttpResponse FBV): `session_manual` - demonstrates manual HTML/template loading
+- View 2 (render FBV): `session_list_render` - uses render() shortcut with context
+- View 3 (Base CBV): `SessionBaseView` - inherits from View, implements get()
+- View 4 (Generic CBV): `SessionListView` - uses ListView with model and template
+
+**Challenges:**
+- Understanding when to use each view type
+- Template inheritance required careful planning of block structure
+
+**Reflections on View Types:**
+- HttpResponse is useful for simple responses or API endpoints returning non-HTML
+- render() is the go-to for most template-based views - cleaner and more Pythonic
+- Base CBV (View) is good when you need custom logic but want class organization
+- Generic CBVs are best for standard CRUD operations - less code, more conventions
+
+---
+
+## Reminders
+- Always use `python3` for commands (Python 3.13 interpreter)
+- Run dev server: `python3 manage.py runserver`
+- Production settings: `DJANGO_SETTINGS_MODULE=rewritelab_project.settings.production`
+- Superuser: tester / uiuc12345
+
+## Clarifications
+- Project name: `rewritelab_project` (Django project configuration)
+- App name: `rewrites` (core feature domain)
+- The `_project` suffix distinguishes config folder from app folder
+
+## Future Tasks
+- Implement actual LLM integration for rewriting
+- Add user authentication
+- Create rewrite comparison UI
+- Add API endpoints for frontend consumption

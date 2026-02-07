@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} | RewriteLab{% endblock %}
+
+{% block content %}
+<h2>{{ title }}</h2>
+
+<div class="card">
+    <h3>Session Information</h3>
+
+    <div style="margin: 1rem 0;">
+        <strong>Original Text:</strong>
+        <p style="background: #f7fafc; padding: 1rem; border-radius: 4px; margin-top: 0.5rem;">
+            {{ session.original_text }}
+        </p>
+    </div>
+
+    <div class="session-meta" style="margin: 1rem 0;">
+        <span class="badge badge-context">{{ session.context.name }}</span>
+        <span class="badge badge-tone">{{ session.tone.name }}</span>
+        {% if session.is_completed %}
+        <span class="badge badge-completed">✓ Completed</span>
+        {% else %}
+        <span class="badge badge-pending">⏳ Pending</span>
+        {% endif %}
+    </div>
+
+    {% if session.audience %}
+    <p><strong>Audience:</strong> {{ session.audience }}</p>
+    {% endif %}
+
+    {% if session.purpose %}
+    <p><strong>Purpose:</strong> {{ session.purpose }}</p>
+    {% endif %}
+
+    <p><strong>Created:</strong> {{ session.created_at }}</p>
+</div>
+
+<div class="card">
+    <h3>Generated Rewrites</h3>
+
+    {% for result in results %}
+    <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <strong>Version {{ result.version_label }}</strong>
+            <span class="badge {% if result.quality_score == 'high' %}badge-completed{% elif result.quality_score == 'medium' %}badge-tone{% else %}badge-pending{% endif %}">
+                {{ result.get_quality_score_display }}
+            </span>
+        </div>
+        <p style="background: #f0fff4; padding: 1rem; border-radius: 4px;">
+            {{ result.rewritten_text }}
+        </p>
+        {% if result.change_summary %}
+        <p style="font-size: 0.875rem; color: #718096; margin-top: 0.5rem;">
+            <em>Changes: {{ result.change_summary }}</em>
+        </p>
+        {% endif %}
+        <p style="font-size: 0.75rem; color: #a0aec0;">
+            Word count: {{ result.word_count_original }} → {{ result.word_count_rewritten }}
+            {% if result.is_selected %} | ✓ Selected by user{% endif %}
+        </p>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <h3>No Rewrites Generated</h3>
+        <p>This session doesn't have any generated rewrites yet.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<p style="margin-top: 1rem;">
+    <a href="{% url 'rewrites:session_cbv_generic' %}">← Back to Session List</a>
+</p>
+{% endblock %}

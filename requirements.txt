@@ -1,0 +1,13 @@
+# RewriteLab Dependencies
+
+# Django Framework
+Django>=4.2
+
+# Environment Variables
+python-dotenv>=1.0.0
+
+# Django Extensions (for development tools)
+django-extensions>=3.2.0
+
+# Database visualization (optional)
+pydot>=2.0.0
