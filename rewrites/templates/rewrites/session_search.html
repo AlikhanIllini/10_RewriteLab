@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} | RewriteLab{% endblock %}
+
+{% block content %}
+<h2>{{ title }}</h2>
+
+<!-- ==========================================================================
+     SUCCESS MESSAGE
+     ========================================================================== -->
+{% if success_message %}
+<div class="card" style="background: linear-gradient(135deg, #c6f6d5 0%, #f0fff4 100%); border-color: #9ae6b4;">
+    <p style="color: #22543d; margin: 0;">✅ {{ success_message }}</p>
+</div>
+{% endif %}
+
+<!-- ==========================================================================
+     ERROR MESSAGES
+     ========================================================================== -->
+{% if errors %}
+<div class="card" style="background: linear-gradient(135deg, #fed7d7 0%, #fff5f5 100%); border-color: #fc8181;">
+    <h3 style="color: #c53030; border: none; padding: 0;">⚠️ Validation Errors</h3>
+    <ul style="color: #c53030; margin: 0.5rem 0 0 1.5rem;">
+        {% for error in errors %}
+        <li>{{ error }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<!-- ==========================================================================
+     GET SEARCH FORM (Section 5)
+     Query parameters visible in URL
+     ========================================================================== -->
+<div class="search-section">
+    <h3>🔍 Search Sessions (GET Form)</h3>
+    <p class="text-muted mb-2">URL query parameters allow sharing search results.</p>
+
+    <form method="GET" action="{% url 'rewrites:session_search' %}" class="form-inline">
+        <div class="form-group">
+            <label for="q">Search Text</label>
+            <input type="text" id="q" name="q" value="{{ search_query }}"
+                   class="form-control" placeholder="Search in text, audience...">
+        </div>
+
+        <div class="form-group">
+            <label for="context">Filter by Context</label>
+            <select name="context" id="context" class="form-control">
+                <option value="">All Contexts</option>
+                {% for ctx in contexts %}
+                <option value="{{ ctx.id }}" {% if context_filter == ctx.id|stringformat:"s" %}selected{% endif %}>
+                    {{ ctx.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">🔍 Search</button>
+        {% if search_query or context_filter %}
+        <a href="{% url 'rewrites:session_search' %}" class="btn btn-secondary">Clear</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- ==========================================================================
+     POST CREATE FORM (Section 5)
+     CSRF protected form for data modification
+     ========================================================================== -->
+<div class="card">
+    <h3>✨ Create New Session (POST Form)</h3>
+    <p class="text-muted mb-2">Submit a new rewrite request. Uses CSRF protection for security.</p>
+
+    <form method="POST" action="{% url 'rewrites:session_search' %}">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="original_text">Original Text *</label>
+            <textarea id="original_text" name="original_text" class="form-control"
+                      rows="4" placeholder="Enter the text you want to rewrite (minimum 10 characters)..."
+                      required>{% if form_data %}{{ form_data.original_text }}{% endif %}</textarea>
+            <p class="form-help">The text you want to improve or rewrite.</p>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="post_context">Writing Context *</label>
+                <select id="post_context" name="context" class="form-control" required>
+                    <option value="">Select a context...</option>
+                    {% for ctx in contexts %}
+                    <option value="{{ ctx.id }}" {% if form_data.context == ctx.id|stringformat:"s" %}selected{% endif %}>
+                        {{ ctx.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="post_tone">Tone *</label>
+                <select id="post_tone" name="tone" class="form-control" required>
+                    <option value="">Select a tone...</option>
+                    {% for t in tones %}
+                    <option value="{{ t.id }}" {% if form_data.tone == t.id|stringformat:"s" %}selected{% endif %}>
+                        {{ t.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="audience">Target Audience (optional)</label>
+                <input type="text" id="audience" name="audience" class="form-control"
+                       placeholder="e.g., Professor, Manager, Client"
+                       value="{% if form_data %}{{ form_data.audience }}{% endif %}">
+            </div>
+
+            <div class="form-group">
+                <label for="purpose">Purpose (optional)</label>
+                <input type="text" id="purpose" name="purpose" class="form-control"
+                       placeholder="e.g., Request extension, Follow up"
+                       value="{% if form_data %}{{ form_data.purpose }}{% endif %}">
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">📝 Create Session</button>
+    </form>
+</div>
+
+<!-- ==========================================================================
+     SEARCH RESULTS
+     ========================================================================== -->
+<div class="card">
+    <h3>📋 Sessions ({{ sessions|length }} found)</h3>
+
+    {% for session in sessions %}
+    <div class="session-item">
+        <div class="text-preview">
+            <!-- Using get_absolute_url() for model-driven URLs -->
+            <a href="{{ session.get_absolute_url }}">
+                {{ session.original_text|truncatewords:25 }}
+            </a>
+        </div>
+        <div class="session-meta">
+            <span class="badge badge-context">{{ session.context.name }}</span>
+            <span class="badge badge-tone">{{ session.tone.name }}</span>
+            {% if session.is_completed %}
+            <span class="badge badge-completed">✓ Completed</span>
+            {% else %}
+            <span class="badge badge-pending">⏳ Pending</span>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <h3>No Sessions Found</h3>
+        <p>No sessions match your search criteria, or there are no sessions yet.</p>
+        <p>Create a new session using the form above!</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- ==========================================================================
+     TECHNICAL NOTES
+     ========================================================================== -->
+<div class="card" style="background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);">
+    <h3>🔧 Form Implementation Notes</h3>
+    <ul style="line-height: 2;">
+        <li><strong>GET Form:</strong> Search parameters in URL query string (shareable)</li>
+        <li><strong>POST Form:</strong> Creates new database records with CSRF protection</li>
+        <li><strong>CSRF Token:</strong> <code>{%templatetag openblock%} csrf_token {%templatetag closeblock%}</code> prevents cross-site request forgery</li>
+        <li><strong>CBV Handling:</strong> <code>SessionSearchView</code> handles both GET (queryset filtering) and POST (object creation)</li>
+        <li><strong>PRG Pattern:</strong> POST-Redirect-GET prevents form resubmission on refresh</li>
+    </ul>
+</div>
+{% endblock %}

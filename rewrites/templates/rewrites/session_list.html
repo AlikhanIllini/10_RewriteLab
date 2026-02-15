@@ -52,7 +52,8 @@
     {% for session in sessions %}
     <div class="session-item">
         <div class="text-preview">
-            <a href="{% url 'rewrites:session_detail' session.pk %}">
+            <!-- Using get_absolute_url() for model-driven URLs (Section 1) -->
+            <a href="{{ session.get_absolute_url }}">
                 {{ session.original_text|truncatewords:30 }}
             </a>
         </div>

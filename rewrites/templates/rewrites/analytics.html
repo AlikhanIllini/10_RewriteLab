@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} | RewriteLab{% endblock %}
+
+{% block content %}
+<h2>{{ title }}</h2>
+
+<!-- ==========================================================================
+     STATISTICS OVERVIEW
+     ========================================================================== -->
+<div class="stats">
+    <div class="stat-card">
+        <div class="stat-value">{{ total_sessions }}</div>
+        <div class="stat-label">Total Sessions</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ completed_sessions }}</div>
+        <div class="stat-label">Completed</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ total_results }}</div>
+        <div class="stat-label">Total Results</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ avg_results_per_session }}</div>
+        <div class="stat-label">Avg Results/Session</div>
+    </div>
+</div>
+
+<!-- ==========================================================================
+     CHARTS (Section 4)
+     These are served as PNG images from Django views using Matplotlib
+     ========================================================================== -->
+<div class="grid-2">
+    <div class="chart-container">
+        <h3>Sessions by Writing Context</h3>
+        <!-- Image served directly from Django view endpoint -->
+        <img src="{% url 'rewrites:chart_context' %}"
+             alt="Bar chart showing the distribution of rewrite sessions across different writing contexts"
+             loading="lazy">
+        <p class="chart-caption">
+            Distribution of sessions across writing contexts (Professional Email, Academic, etc.)
+        </p>
+    </div>
+
+    <div class="chart-container">
+        <h3>Sessions by Tone</h3>
+        <img src="{% url 'rewrites:chart_tone' %}"
+             alt="Pie chart showing the distribution of sessions by tone selection"
+             loading="lazy">
+        <p class="chart-caption">
+            Percentage breakdown of tone selections (Clear, Polite, Professional, etc.)
+        </p>
+    </div>
+</div>
+
+<div class="chart-container">
+    <h3>Results by Quality Score</h3>
+    <img src="{% url 'rewrites:chart_quality' %}"
+         alt="Horizontal bar chart showing rewrite results categorized by quality score"
+         loading="lazy">
+    <p class="chart-caption">
+        Quality distribution of generated rewrites (Low, Medium, High)
+    </p>
+</div>
+
+<!-- ==========================================================================
+     DATA TABLES
+     ========================================================================== -->
+<div class="card">
+    <h3>📊 Sessions by Context (Raw Data)</h3>
+    <table class="results-table">
+        <thead>
+            <tr>
+                <th>Context</th>
+                <th>Session Count</th>
+                <th>Percentage</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in sessions_by_context %}
+            <tr>
+                <td>{{ item.context__name }}</td>
+                <td>{{ item.count }}</td>
+                <td>{% widthratio item.count total_sessions 100 %}%</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" class="text-center text-muted">No data available</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <h3>🎨 Sessions by Tone (Raw Data)</h3>
+    <table class="results-table">
+        <thead>
+            <tr>
+                <th>Tone</th>
+                <th>Session Count</th>
+                <th>Percentage</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in sessions_by_tone %}
+            <tr>
+                <td>{{ item.tone__name }}</td>
+                <td>{{ item.count }}</td>
+                <td>{% widthratio item.count total_sessions 100 %}%</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" class="text-center text-muted">No data available</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <h3>⭐ Results by Quality</h3>
+    <table class="results-table">
+        <thead>
+            <tr>
+                <th>Quality Score</th>
+                <th>Result Count</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in results_by_quality %}
+            <tr>
+                <td>
+                    <span class="badge badge-quality-{{ item.quality_score }}">
+                        {{ item.quality_score|capfirst }}
+                    </span>
+                </td>
+                <td>{{ item.count }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="2" class="text-center text-muted">No data available</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- ==========================================================================
+     TECHNICAL NOTES
+     ========================================================================== -->
+<div class="card" style="background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);">
+    <h3>🔧 Technical Implementation Notes</h3>
+    <ul style="line-height: 2;">
+        <li><strong>Chart Generation:</strong> Matplotlib with non-interactive Agg backend</li>
+        <li><strong>Memory Management:</strong> BytesIO buffers for in-memory image generation</li>
+        <li><strong>Image Endpoints:</strong> Charts served directly via Django views returning PNG</li>
+        <li><strong>Data Aggregation:</strong> Django ORM with <code>annotate()</code> and <code>Count()</code></li>
+    </ul>
+
+    <h4 class="mt-2">Direct Image URLs:</h4>
+    <ul style="font-family: monospace; font-size: 0.875rem;">
+        <li><a href="{% url 'rewrites:chart_context' %}" target="_blank">/charts/sessions-by-context.png</a></li>
+        <li><a href="{% url 'rewrites:chart_tone' %}" target="_blank">/charts/sessions-by-tone.png</a></li>
+        <li><a href="{% url 'rewrites:chart_quality' %}" target="_blank">/charts/results-quality.png</a></li>
+    </ul>
+</div>
+{% endblock %}

@@ -77,3 +77,92 @@
 - Add user authentication
 - Create rewrite comparison UI
 - Add API endpoints for frontend consumption
+
+---
+
+### Week 3 (Assignment 3: User Input, Analysis, & APIs)
+**Date:** February 2026
+
+**Completed:**
+
+#### Section 1: URL Linking & Navigation
+- Configured home page at root URL (/)
+- Added navigation bar in base.html with {% url %} tags (6 navigation items)
+- Created detail page URLs at /sessions/<pk>/
+- Implemented `get_absolute_url()` on RewriteSession model
+
+**Why get_absolute_url() is useful:**
+The `get_absolute_url()` method provides a canonical way to get the URL for a model instance. Benefits include:
+1. Templates can use `{{ object.get_absolute_url }}` instead of `{% url 'app:view' object.pk %}`
+2. Centralized URL logic - if URL pattern changes, only update one place
+3. Used by Django admin's "View on site" feature
+4. Enables the model to be self-documenting about its primary URL
+
+#### Section 2: ORM Queries & Data Presentation
+- Implemented GET search for shareable text searches
+- Implemented POST search for advanced filtering (context, tone, status)
+- Used ORM lookups: __icontains, __exact
+- Relationship spanning: context__name, tone__name
+- Aggregations with Count() and annotate() for grouped summaries
+
+#### Section 3: Static Files & UI Styling
+- Created /static/css/styles.css with comprehensive styling
+- Added {% load static %} in base.html
+- Implemented CSS variables for easy theming
+- Added Google Fonts (Inter) for typography
+- Responsive design with media queries
+
+**Static File Organization:**
+- Chose project-level static directory (/static/) for shared assets
+- App-specific assets would go in rewrites/static/rewrites/
+- Production: STATIC_ROOT collects all static files via collectstatic
+
+**Cache Busting:**
+- Implemented via query parameter: styles.css?v=1.0
+- Alternative: Django's ManifestStaticFilesStorage hashes filenames
+- Purpose: Forces browsers to fetch new CSS when version changes
+
+#### Section 4: Data Visualization (Matplotlib)
+- Created 3 chart endpoints:
+  - /charts/sessions-by-context.png (bar chart)
+  - /charts/sessions-by-tone.png (pie chart)
+  - /charts/results-quality.png (horizontal bar chart)
+- Used BytesIO for memory-efficient image generation
+- Matplotlib configured with 'Agg' backend (non-interactive)
+
+**BytesIO Memory Awareness:**
+- BytesIO holds image data in RAM temporarily
+- Buffer is written directly to HttpResponse
+- Figure is closed after saving to free matplotlib memory
+- For large-scale apps, consider caching generated images
+
+#### Section 5: Forms & User Input
+- GET form: Search with URL query parameters (shareable)
+- POST form: Create new sessions with CSRF protection
+- SessionSearchView CBV handles both GET (filtering) and POST (creation)
+- Implemented PRG (Post-Redirect-Get) pattern
+
+#### Section 6: Creating APIs
+- FBV API: api_sessions() with filtering support
+- CBV API: APISessionsView class-based implementation
+- Additional endpoints: /api/contexts/, /api/tones/
+- Demo endpoint showing HttpResponse vs JsonResponse
+
+**API Planning:**
+- Serving: Session data, contexts, tones, and aggregated statistics
+- Future: Add authentication, rate limiting, pagination
+- Use cases: Frontend SPA, mobile apps, third-party integrations
+
+**HttpResponse vs JsonResponse:**
+- HttpResponse: Generic response, must set content_type manually
+- JsonResponse: Automatically serializes to JSON, sets application/json content type
+- Demo at /api/demo/?format=json or ?format=html
+
+---
+
+## Screenshots for Grading
+
+**Section 1:** Home page at /
+**Section 3:** Any page (CSS applied globally) - recommend /analytics/ for charts
+**Section 6:** /api/sessions/ for JSON output
+

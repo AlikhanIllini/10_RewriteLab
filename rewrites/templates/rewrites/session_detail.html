@@ -5,12 +5,16 @@
 {% block content %}
 <h2>{{ title }}</h2>
 
+<div class="view-type">
+    <strong>URL Pattern:</strong> /sessions/{{ session.pk }}/ (Detail page with primary key)
+</div>
+
 <div class="card">
     <h3>Session Information</h3>
 
     <div style="margin: 1rem 0;">
         <strong>Original Text:</strong>
-        <p style="background: #f7fafc; padding: 1rem; border-radius: 4px; margin-top: 0.5rem;">
+        <p style="background: #f7fafc; padding: 1rem; border-radius: 8px; margin-top: 0.5rem; border: 1px solid #e2e8f0;">
             {{ session.original_text }}
         </p>
     </div>
@@ -34,6 +38,7 @@
     {% endif %}
 
     <p><strong>Created:</strong> {{ session.created_at }}</p>
+    <p><strong>Session Token:</strong> <code>{{ session.session_token|truncatechars:16 }}</code></p>
 </div>
 
 <div class="card">
@@ -47,7 +52,7 @@
                 {{ result.get_quality_score_display }}
             </span>
         </div>
-        <p style="background: #f0fff4; padding: 1rem; border-radius: 4px;">
+        <p style="background: #f0fff4; padding: 1rem; border-radius: 8px; border: 1px solid #c6f6d5;">
             {{ result.rewritten_text }}
         </p>
         {% if result.change_summary %}
@@ -68,7 +73,16 @@
     {% endfor %}
 </div>
 
+<div class="card" style="background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);">
+    <h3>🔧 API Access</h3>
+    <p>You can also access this session data via the JSON API:</p>
+    <div class="api-endpoint">
+        <span class="api-method">GET</span>
+        <a href="{% url 'rewrites:api_session_detail' session.pk %}">/api/sessions/{{ session.pk }}/</a>
+    </div>
+</div>
+
 <p style="margin-top: 1rem;">
-    <a href="{% url 'rewrites:session_cbv_generic' %}">← Back to Session List</a>
+    <a href="{% url 'rewrites:session_cbv_generic' %}" class="btn btn-secondary">← Back to Session List</a>
 </p>
 {% endblock %}

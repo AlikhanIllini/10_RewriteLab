@@ -5,7 +5,56 @@ RewriteLab is a web app that helps users improve professional and academic writi
 ## Current Status
 
 ✅ **Part 1: Data Model Design** - Complete  
-✅ **Part 2: Project Foundations + Views + Templates** - Complete
+✅ **Part 2: Project Foundations + Views + Templates** - Complete  
+✅ **Part 3: User Input, Analysis, & APIs** - Complete
+
+## Assignment 3 Features
+
+### Section 1: URL Linking & Navigation
+- Home page at `/` with navigation bar using `{% url %}` tags
+- Detail pages at `/sessions/<pk>/` for viewing individual sessions
+- `get_absolute_url()` implemented on `RewriteSession` model for model-driven URLs
+
+### Section 2: ORM Queries & Data Presentation
+- **GET Search**: Text search with shareable URLs (`?q=search_term`)
+- **POST Search**: Advanced filters with context, tone, and status
+- **Filters used**: `__icontains`, `__exact`, relationship spanning (`context__name`)
+- **Aggregations**: Total counts, grouped counts by context/tone using `annotate()` and `Count()`
+
+### Section 3: Static Files & UI Styling
+- Custom CSS at `/static/css/styles.css` with modern styling
+- Google Fonts integration (Inter font family)
+- Cache busting with version parameter (`?v=1.0`)
+- Responsive design with CSS Grid and Flexbox
+
+### Section 4: Data Visualization (Matplotlib)
+- Bar chart: Sessions by Writing Context (`/charts/sessions-by-context.png`)
+- Pie chart: Sessions by Tone (`/charts/sessions-by-tone.png`)
+- Horizontal bar chart: Results by Quality (`/charts/results-quality.png`)
+- Memory-efficient implementation using BytesIO
+
+### Section 5: Forms & User Input
+- GET form for search (URL parameters visible)
+- POST form for creating new sessions (CSRF protected)
+- `SessionSearchView` CBV handles both GET and POST requests
+- PRG (Post-Redirect-Get) pattern prevents form resubmission
+
+### Section 6: Creating APIs
+- **FBV API**: `/api/sessions/` with filtering support
+- **CBV API**: `/api/v2/sessions/` using class-based view
+- **Additional endpoints**: `/api/contexts/`, `/api/tones/`
+- **Demo endpoint**: `/api/demo/` shows HttpResponse vs JsonResponse MIME types
+
+## API Documentation
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/sessions/` | GET | List sessions with optional filters (?context=, ?tone=, ?completed=) |
+| `/api/sessions/<pk>/` | GET | Get detailed session with results |
+| `/api/v2/sessions/` | GET | CBV API endpoint for sessions |
+| `/api/contexts/` | GET | List available writing contexts |
+| `/api/tones/` | GET | List available tone options |
+| `/api/demo/?format=json\|html` | GET | Demonstrate MIME type differences |
 
 ## Project Structure
 

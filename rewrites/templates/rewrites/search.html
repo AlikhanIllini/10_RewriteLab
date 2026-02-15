@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} | RewriteLab{% endblock %}
+
+{% block content %}
+<h2>{{ title }}</h2>
+
+<!-- ==========================================================================
+     AGGREGATIONS SUMMARY (Section 2)
+     ========================================================================== -->
+<div class="summary-section">
+    <h3>📊 Data Summary</h3>
+    <div class="summary-grid">
+        <div class="summary-item">
+            <span class="label">Total Sessions</span>
+            <span class="value">{{ total_count }}</span>
+        </div>
+        <div class="summary-item">
+            <span class="label">Filtered Results</span>
+            <span class="value">{{ filtered_count }}</span>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================================================
+     GET SEARCH FORM (Section 2 + Section 5)
+     Shareable URL - query params visible in URL
+     ========================================================================== -->
+<div class="search-section">
+    <h3>🔍 Text Search (GET Method)</h3>
+    <p class="text-muted mb-2">Search results are shareable via URL. Try searching and sharing the link!</p>
+
+    <form method="GET" action="{% url 'rewrites:search' %}" class="form-inline">
+        <div class="form-group">
+            <label for="q">Search Text</label>
+            <input type="text" id="q" name="q" value="{{ get_query }}"
+                   class="form-control" placeholder="Search in text, audience, purpose...">
+        </div>
+        <button type="submit" class="btn btn-primary">🔍 Search</button>
+        {% if get_query %}
+        <a href="{% url 'rewrites:search' %}" class="btn btn-secondary">Clear</a>
+        {% endif %}
+    </form>
+
+    {% if get_query %}
+    <p class="form-help mt-2">
+        <strong>Current URL:</strong> <code>{{ request.get_full_path }}</code>
+    </p>
+    {% endif %}
+</div>
+
+<!-- ==========================================================================
+     POST FILTER FORM (Section 2 + Section 5)
+     Non-shareable - filter data hidden in POST body
+     ========================================================================== -->
+<div class="search-section">
+    <h3>🎛️ Advanced Filters (POST Method)</h3>
+    <p class="text-muted mb-2">Filter data is not visible in URL - useful for hiding filter parameters.</p>
+
+    <form method="POST" action="{% url 'rewrites:search' %}" class="form-inline">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="context">Context</label>
+            <select name="context" id="context" class="form-control">
+                <option value="">All Contexts</option>
+                {% for ctx in contexts %}
+                <option value="{{ ctx.name }}" {% if post_context == ctx.name %}selected{% endif %}>
+                    {{ ctx.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="tone">Tone</label>
+            <select name="tone" id="tone" class="form-control">
+                <option value="">All Tones</option>
+                {% for t in tones %}
+                <option value="{{ t.name }}" {% if post_tone == t.name %}selected{% endif %}>
+                    {{ t.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="status">Status</label>
+            <select name="status" id="status" class="form-control">
+                <option value="">All</option>
+                <option value="completed" {% if post_status == 'completed' %}selected{% endif %}>Completed</option>
+                <option value="pending" {% if post_status == 'pending' %}selected{% endif %}>Pending</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">🎯 Apply Filters</button>
+    </form>
+
+    {% if post_context or post_tone or post_status %}
+    <p class="form-help mt-2">
+        <strong>Active filters:</strong>
+        {% if post_context %}Context: {{ post_context }}{% endif %}
+        {% if post_tone %}| Tone: {{ post_tone }}{% endif %}
+        {% if post_status %}| Status: {{ post_status }}{% endif %}
+    </p>
+    {% endif %}
+</div>
+
+<!-- ==========================================================================
+     GROUPED AGGREGATIONS (Section 2)
+     ========================================================================== -->
+<div class="card">
+    <h3>📈 Sessions by Context (Grouped Count)</h3>
+    <div class="summary-grid">
+        {% for item in sessions_by_context %}
+        <div class="summary-item">
+            <span class="label">{{ item.context__name }}</span>
+            <span class="value">{{ item.count }}</span>
+        </div>
+        {% empty %}
+        <p class="text-muted">No data available</p>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="card">
+    <h3>🎨 Sessions by Tone (Grouped Count)</h3>
+    <div class="summary-grid">
+        {% for item in sessions_by_tone %}
+        <div class="summary-item">
+            <span class="label">{{ item.tone__name }}</span>
+            <span class="value">{{ item.count }}</span>
+        </div>
+        {% empty %}
+        <p class="text-muted">No data available</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ==========================================================================
+     SEARCH RESULTS (Section 2)
+     ========================================================================== -->
+<div class="card">
+    <h3>📝 Sessions ({{ filtered_count }} results)</h3>
+
+    {% for session in sessions %}
+    <div class="session-item">
+        <div class="text-preview">
+            <!-- Using get_absolute_url() instead of manually building URL -->
+            <a href="{{ session.get_absolute_url }}">
+                {{ session.original_text|truncatewords:30 }}
+            </a>
+        </div>
+        <div class="session-meta">
+            <span class="badge badge-context">{{ session.context.name }}</span>
+            <span class="badge badge-tone">{{ session.tone.name }}</span>
+            {% if session.is_completed %}
+            <span class="badge badge-completed">✓ Completed</span>
+            {% else %}
+            <span class="badge badge-pending">⏳ Pending</span>
+            {% endif %}
+            {% if session.audience %}
+            <span>👥 {{ session.audience }}</span>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <h3>No Sessions Found</h3>
+        <p>No sessions match your search criteria.</p>
+        <p>Try adjusting your filters or <a href="{% url 'rewrites:search' %}">clear all filters</a>.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

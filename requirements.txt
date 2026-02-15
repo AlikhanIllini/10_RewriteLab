@@ -11,3 +11,7 @@ django-extensions>=3.2.0
 
 # Database visualization (optional)
 pydot>=2.0.0
+
+# Data Visualization (A3 Section 4)
+matplotlib>=3.8.0
+

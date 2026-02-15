@@ -25,11 +25,79 @@
     </div>
 </div>
 
+<!-- ==========================================================================
+     ASSIGNMENT 3 FEATURES
+     ========================================================================== -->
 <div class="card">
-    <h2>View Types Demo</h2>
-    <p>This project demonstrates four different Django view patterns:</p>
+    <h2>🚀 Assignment 3 Features</h2>
+    <p>This project demonstrates Django's data-driven capabilities:</p>
 
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem;">
+    <div class="grid-4">
+        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
+            <h3 style="color: #667eea;">📝 Sessions</h3>
+            <p style="font-size: 0.875rem; color: #718096;">Browse all rewrite sessions with detail views</p>
+            <a href="{% url 'rewrites:session_cbv_generic' %}">View Sessions →</a>
+        </div>
+
+        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
+            <h3 style="color: #667eea;">🔍 Search</h3>
+            <p style="font-size: 0.875rem; color: #718096;">GET/POST search with ORM filters & aggregations</p>
+            <a href="{% url 'rewrites:search' %}">Search Sessions →</a>
+        </div>
+
+        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
+            <h3 style="color: #667eea;">📊 Analytics</h3>
+            <p style="font-size: 0.875rem; color: #718096;">Matplotlib charts with BytesIO image serving</p>
+            <a href="{% url 'rewrites:analytics' %}">View Analytics →</a>
+        </div>
+
+        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
+            <h3 style="color: #667eea;">🔌 API</h3>
+            <p style="font-size: 0.875rem; color: #718096;">JSON API endpoints with filtering support</p>
+            <a href="{% url 'rewrites:api_sessions' %}">Browse API →</a>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>📋 Quick Links</h2>
+    <div class="grid-2">
+        <div>
+            <h3>Forms & Input</h3>
+            <ul style="list-style: none; padding: 0;">
+                <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
+                    <a href="{% url 'rewrites:search' %}">🔍 Search (GET & POST Forms)</a>
+                </li>
+                <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
+                    <a href="{% url 'rewrites:session_search' %}">✨ Create Session (CBV with GET/POST)</a>
+                </li>
+            </ul>
+        </div>
+        <div>
+            <h3>API Endpoints</h3>
+            <ul style="list-style: none; padding: 0;">
+                <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
+                    <a href="{% url 'rewrites:api_sessions' %}">📦 /api/sessions/</a>
+                </li>
+                <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
+                    <a href="{% url 'rewrites:api_contexts' %}">📁 /api/contexts/</a>
+                </li>
+                <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
+                    <a href="{% url 'rewrites:api_tones' %}">🎨 /api/tones/</a>
+                </li>
+                <li style="padding: 0.5rem 0;">
+                    <a href="{% url 'rewrites:api_demo' %}?format=json">🔀 HttpResponse vs JsonResponse Demo</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>🔧 View Types Demo</h2>
+    <p>Four different Django view patterns (from Assignment 2):</p>
+
+    <div class="grid-4">
         <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
             <h3 style="color: #667eea;">1. HttpResponse FBV</h3>
             <p style="font-size: 0.875rem; color: #718096;">Manual template loading with loader.get_template()</p>
@@ -57,13 +125,11 @@
 </div>
 
 <div class="card" style="background: #f7fafc;">
-    <h2>Quick Links</h2>
+    <h2>🔐 Admin Access</h2>
     <ul style="list-style: none; padding: 0;">
-        <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
-            <a href="{% url 'admin:index' %}">🔐 Django Admin Panel</a>
-        </li>
         <li style="padding: 0.5rem 0;">
-            <a href="{% url 'rewrites:session_cbv_generic' %}">📝 View All Sessions</a>
+            <a href="{% url 'admin:index' %}">Django Admin Panel</a>
+            <span style="font-size: 0.875rem; color: #718096;"> (tester / uiuc12345)</span>
         </li>
     </ul>
 </div>

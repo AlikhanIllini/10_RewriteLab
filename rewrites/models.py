@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import MinLengthValidator
+from django.urls import reverse
 
 
 class RewriteContext(models.Model):
@@ -152,6 +153,14 @@ class RewriteSession(models.Model):
     def __str__(self):
         preview = self.original_text[:50] + '...' if len(self.original_text) > 50 else self.original_text
         return f"Session {self.session_token[:8]}: {preview}"
+
+    def get_absolute_url(self):
+        """
+        Returns the canonical URL for this session.
+        Used in templates with {{ session.get_absolute_url }} instead of
+        manually building URLs with {% url %} and session.pk
+        """
+        return reverse('rewrites:session_detail', kwargs={'pk': self.pk})
 
 
 class RewriteResult(models.Model):
