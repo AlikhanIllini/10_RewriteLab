@@ -6,27 +6,27 @@
 <h2>{{ title }}</h2>
 
 <div class="view-type">
-    <strong>A4 Part 2:</strong> External API Integration (Quotable API - keyless)
+    <strong>A4 Part 2:</strong> External API Integration (ZenQuotes API - keyless)
 </div>
 
 <!-- ==========================================================================
      SEARCH FORM
      ========================================================================== -->
 <div class="search-section">
-    <h3>🔍 Search Writing Inspiration</h3>
-    <p class="text-muted mb-2">Find quotes by tag to inspire your writing. Uses the Quotable API.</p>
+    <h3>🔍 Get Writing Inspiration</h3>
+    <p class="text-muted mb-2">Get inspirational quotes to motivate your writing. Uses the ZenQuotes API.</p>
 
     <form method="GET" action="{% url 'rewrites:external_quotes' %}" class="form-inline">
         <div class="form-group">
-            <label for="q">Quote Tag</label>
+            <label for="q">Topic</label>
             <input type="text" id="q" name="q" value="{{ query }}"
-                   class="form-control" placeholder="e.g., wisdom, technology, creativity">
+                   class="form-control" placeholder="e.g., inspiration, motivation, writing">
         </div>
-        <button type="submit" class="btn btn-primary">🔍 Search Quotes</button>
+        <button type="submit" class="btn btn-primary">🔍 Get Quotes</button>
     </form>
 
     <p class="form-help mt-2">
-        Popular tags: wisdom, technology, creativity, success, life, happiness, inspirational
+        Enter a topic to describe what kind of inspiration you're looking for.
     </p>
 </div>
 
@@ -103,8 +103,8 @@
 <div class="card" style="background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);">
     <h3>🔧 Technical Implementation</h3>
     <ul style="line-height: 2;">
-        <li><strong>External API:</strong> <a href="https://api.quotable.io" target="_blank">Quotable API</a> (no API key required)</li>
-        <li><strong>Request Method:</strong> <code>requests.get()</code> with <code>params=...</code>, <code>timeout=5</code></li>
+        <li><strong>External API:</strong> <a href="https://zenquotes.io" target="_blank">ZenQuotes API</a> (no API key required)</li>
+        <li><strong>Request Method:</strong> <code>requests.get()</code> with <code>timeout=5</code></li>
         <li><strong>Error Handling:</strong> <code>.raise_for_status()</code> with try/except</li>
         <li><strong>Combined API:</strong> <a href="{% url 'rewrites:api_external_quotes' %}?q={{ query }}">JSON endpoint</a> merges external + internal data</li>
     </ul>

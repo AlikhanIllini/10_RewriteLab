@@ -26,10 +26,10 @@ RewriteLab is a web app that helps users improve professional and academic writi
 - Vega-Lite JSON specifications provided
 
 ### Part 2: External API Integration
-- Integrated **Quotable API** (keyless) for writing inspiration
+- Integrated **ZenQuotes API** (keyless) for writing inspiration
 - HTML page at `/external/quotes/` with search functionality
 - Combined API at `/api/external/quotes/` merging external + internal data
-- Implements: `requests.get()`, `params=...`, `timeout=5`, `.raise_for_status()`
+- Implements: `requests.get()`, `timeout=5`, `.raise_for_status()`
 
 ### Part 3: CSV and JSON Exports
 - Sessions CSV/JSON exports with timestamped filenames

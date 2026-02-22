@@ -20,7 +20,7 @@ from django.http import HttpResponse, JsonResponse
 from django.template import loader
 from django.views import View
 from django.views.generic import ListView, DetailView
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Avg
 from django.utils import timezone
 import io
 import requests
@@ -949,24 +949,27 @@ def vegalite_charts(request):
 def external_api_quotes(request):
     """
     External API integration - Fetches quotes/advice to combine with our data.
-    Uses the Quotable API (https://api.quotable.io) - no API key required.
+    Uses the ZenQuotes API (https://zenquotes.io) - no API key required.
 
     URL: /external/quotes/
-    Query params: ?q=tag (e.g., ?q=wisdom, ?q=technology)
+    Query params: ?q=keyword (for display purposes, API returns random quotes)
     """
-    query = request.GET.get('q', 'wisdom')
+    query = request.GET.get('q', 'inspiration')
 
     try:
         # Call external API with timeout and error handling
         response = requests.get(
-            'https://api.quotable.io/quotes',
-            params={'tags': query, 'limit': 5},
+            'https://zenquotes.io/api/quotes',
             timeout=5
         )
         response.raise_for_status()
 
         external_data = response.json()
-        quotes = external_data.get('results', [])
+        # ZenQuotes returns list of quotes with 'q' (quote) and 'a' (author)
+        quotes = [
+            {'content': q['q'], 'author': q['a']}
+            for q in external_data[:5]  # Limit to 5 quotes
+        ]
 
     except requests.exceptions.Timeout:
         quotes = []
@@ -998,21 +1001,20 @@ def api_external_quotes(request):
     API endpoint that combines external API data with internal analytics.
 
     URL: /api/external/quotes/
-    Query params: ?q=tag
+    Query params: ?q=keyword
     """
-    query = request.GET.get('q', 'wisdom')
+    query = request.GET.get('q', 'inspiration')
 
     try:
         response = requests.get(
-            'https://api.quotable.io/quotes',
-            params={'tags': query, 'limit': 3},
+            'https://zenquotes.io/api/quotes',
             timeout=5
         )
         response.raise_for_status()
         external_data = response.json()
         quotes = [
-            {'content': q['content'], 'author': q['author']}
-            for q in external_data.get('results', [])
+            {'content': q['q'], 'author': q['a']}
+            for q in external_data[:3]  # Limit to 3 quotes
         ]
         error = None
     except requests.exceptions.RequestException as e:
