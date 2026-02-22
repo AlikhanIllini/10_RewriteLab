@@ -6,7 +6,44 @@ RewriteLab is a web app that helps users improve professional and academic writi
 
 ✅ **Part 1: Data Model Design** - Complete  
 ✅ **Part 2: Project Foundations + Views + Templates** - Complete  
-✅ **Part 3: User Input, Analysis, & APIs** - Complete
+✅ **Part 3: User Input, Analysis, & APIs** - Complete  
+✅ **Part 4: APIs, Vega-Lite Charts, Exports, Deployment** - Complete
+
+## Assignment 4 Features (NEW)
+
+### Part 1: Internal API for Vega-Lite Charts
+- Clean JSON API endpoints optimized for Vega-Lite:
+  - `/api/summary/` - Aggregated summary data
+  - `/api/chart/context/` - Sessions by context (bar chart)
+  - `/api/chart/timeline/` - Sessions over time (line chart)
+  - `/api/chart/quality/` - Results by quality score
+
+### Part 1.2: Vega-Lite Charts
+- Embedded interactive charts at `/vega-lite/`
+- Bar Chart: Sessions by Writing Context
+- Line Chart: Sessions Created Over Time
+- Charts use `data: { url: "API_URL" }` (not inline data)
+- Vega-Lite JSON specifications provided
+
+### Part 2: External API Integration
+- Integrated **Quotable API** (keyless) for writing inspiration
+- HTML page at `/external/quotes/` with search functionality
+- Combined API at `/api/external/quotes/` merging external + internal data
+- Implements: `requests.get()`, `params=...`, `timeout=5`, `.raise_for_status()`
+
+### Part 3: CSV and JSON Exports
+- Sessions CSV/JSON exports with timestamped filenames
+- Results CSV/JSON exports
+- Reports page at `/reports/` with:
+  - Grouped summaries (by context, tone, quality)
+  - Totals row
+  - Download buttons for CSV and JSON
+
+### Part 4: Deployment Ready
+- Static files configured (STATIC_URL, STATICFILES_DIRS, STATIC_ROOT)
+- db.sqlite3 included (not in .gitignore) for grading
+- requirements.txt updated for PythonAnywhere
+- staticfiles/ folder ignored (run collectstatic on server)
 
 ## Assignment 3 Features
 
@@ -49,12 +86,23 @@ RewriteLab is a web app that helps users improve professional and academic writi
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/sessions/` | GET | List sessions with optional filters (?context=, ?tone=, ?completed=) |
+| `/api/summary/` | GET | Aggregated summary (Vega-Lite ready) |
+| `/api/chart/context/` | GET | Bar chart data - sessions by context |
+| `/api/chart/timeline/` | GET | Line chart data - sessions over time |
+| `/api/external/quotes/?q=` | GET | External API + internal data combined |
+| `/api/sessions/` | GET | List sessions with optional filters |
 | `/api/sessions/<pk>/` | GET | Get detailed session with results |
-| `/api/v2/sessions/` | GET | CBV API endpoint for sessions |
 | `/api/contexts/` | GET | List available writing contexts |
 | `/api/tones/` | GET | List available tone options |
-| `/api/demo/?format=json\|html` | GET | Demonstrate MIME type differences |
+| `/export/sessions/csv/` | GET | Download sessions as CSV |
+| `/export/sessions/json/` | GET | Download sessions as JSON |
+
+## Screenshots Guide
+
+- **Vega-Lite Charts**: `/vega-lite/`
+- **Reports & Exports**: `/reports/`
+- **External API**: `/external/quotes/`
+- **JSON API**: `/api/summary/`
 
 ## Project Structure
 

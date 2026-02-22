@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} | RewriteLab{% endblock %}
+
+{% block content %}
+<h2>{{ title }}</h2>
+
+<div class="view-type">
+    <strong>A4 Part 3:</strong> Reports with grouped summaries, totals, and export functionality
+</div>
+
+<!-- ==========================================================================
+     TOTALS SUMMARY
+     ========================================================================== -->
+<div class="stats">
+    <div class="stat-card">
+        <div class="stat-value">{{ total_sessions }}</div>
+        <div class="stat-label">Total Sessions</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ total_completed }}</div>
+        <div class="stat-label">Completed</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ total_results }}</div>
+        <div class="stat-label">Total Results</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ total_contexts }}</div>
+        <div class="stat-label">Contexts</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ total_tones }}</div>
+        <div class="stat-label">Tones</div>
+    </div>
+</div>
+
+<!-- ==========================================================================
+     EXPORT BUTTONS
+     ========================================================================== -->
+<div class="card">
+    <h3>📥 Export Data</h3>
+    <p class="text-muted mb-2">Download your data in CSV or JSON format</p>
+
+    <div class="grid-2">
+        <div>
+            <h4>Sessions Export</h4>
+            <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                <a href="{% url 'rewrites:export_sessions_csv' %}" class="btn btn-primary">
+                    📄 Download CSV
+                </a>
+                <a href="{% url 'rewrites:export_sessions_json' %}" class="btn btn-secondary">
+                    📋 Download JSON
+                </a>
+            </div>
+        </div>
+        <div>
+            <h4>Results Export</h4>
+            <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                <a href="{% url 'rewrites:export_results_csv' %}" class="btn btn-primary">
+                    📄 Download CSV
+                </a>
+                <a href="{% url 'rewrites:export_results_json' %}" class="btn btn-secondary">
+                    📋 Download JSON
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================================================
+     GROUPED SUMMARY 1: Sessions by Context
+     ========================================================================== -->
+<div class="card">
+    <h3>📊 Sessions by Writing Context</h3>
+    <p class="text-muted">Grouped summary showing total, completed, and pending sessions per context</p>
+
+    <table class="results-table">
+        <thead>
+            <tr>
+                <th>Context</th>
+                <th>Total</th>
+                <th>Completed</th>
+                <th>Pending</th>
+                <th>Completion Rate</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in sessions_by_context %}
+            <tr>
+                <td><span class="badge badge-context">{{ item.context__name }}</span></td>
+                <td>{{ item.total }}</td>
+                <td style="color: #22543d;">{{ item.completed }}</td>
+                <td style="color: #c05621;">{{ item.pending }}</td>
+                <td>
+                    {% if item.total > 0 %}
+                        {% widthratio item.completed item.total 100 %}%
+                    {% else %}
+                        0%
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center text-muted">No sessions found</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot style="background: #f7fafc; font-weight: bold;">
+            <tr>
+                <td>Total</td>
+                <td>{{ total_sessions }}</td>
+                <td style="color: #22543d;">{{ total_completed }}</td>
+                <td style="color: #c05621;">{{ total_sessions|add:"-"|add:total_completed|default:0 }}</td>
+                <td>
+                    {% if total_sessions > 0 %}
+                        {% widthratio total_completed total_sessions 100 %}%
+                    {% else %}
+                        0%
+                    {% endif %}
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+<!-- ==========================================================================
+     GROUPED SUMMARY 2: Sessions by Tone
+     ========================================================================== -->
+<div class="card">
+    <h3>🎨 Sessions by Tone</h3>
+    <p class="text-muted">Distribution of sessions across different tone options</p>
+
+    <table class="results-table">
+        <thead>
+            <tr>
+                <th>Tone</th>
+                <th>Total Sessions</th>
+                <th>Completed</th>
+                <th>Percentage</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in sessions_by_tone %}
+            <tr>
+                <td><span class="badge badge-tone">{{ item.tone__name }}</span></td>
+                <td>{{ item.total }}</td>
+                <td>{{ item.completed }}</td>
+                <td>
+                    {% if total_sessions > 0 %}
+                        {% widthratio item.total total_sessions 100 %}%
+                    {% else %}
+                        0%
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="text-center text-muted">No sessions found</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- ==========================================================================
+     GROUPED SUMMARY 3: Results by Quality
+     ========================================================================== -->
+<div class="card">
+    <h3>⭐ Results by Quality Score</h3>
+    <p class="text-muted">Distribution of generated rewrites by quality rating</p>
+
+    <table class="results-table">
+        <thead>
+            <tr>
+                <th>Quality Score</th>
+                <th>Count</th>
+                <th>Percentage</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in results_by_quality %}
+            <tr>
+                <td>
+                    <span class="badge {% if item.quality_score == 'high' %}badge-completed{% elif item.quality_score == 'medium' %}badge-tone{% else %}badge-pending{% endif %}">
+                        {{ item.quality_score|capfirst }}
+                    </span>
+                </td>
+                <td>{{ item.count }}</td>
+                <td>
+                    {% if total_results > 0 %}
+                        {% widthratio item.count total_results 100 %}%
+                    {% else %}
+                        0%
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" class="text-center text-muted">No results found</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot style="background: #f7fafc; font-weight: bold;">
+            <tr>
+                <td>Total Results</td>
+                <td>{{ total_results }}</td>
+                <td>100%</td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+<!-- ==========================================================================
+     API ENDPOINTS FOR DATA
+     ========================================================================== -->
+<div class="card" style="background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);">
+    <h3>🔗 Data API Endpoints</h3>
+    <p class="text-muted">Access this data programmatically via JSON APIs</p>
+
+    <ul style="list-style: none; padding: 0;">
+        <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
+            <a href="{% url 'rewrites:api_summary' %}">📊 /api/summary/</a> - Aggregated summary data
+        </li>
+        <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
+            <a href="{% url 'rewrites:api_sessions' %}">📝 /api/sessions/</a> - All sessions
+        </li>
+        <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
+            <a href="{% url 'rewrites:api_contexts' %}">📁 /api/contexts/</a> - Writing contexts
+        </li>
+        <li style="padding: 0.5rem 0;">
+            <a href="{% url 'rewrites:api_tones' %}">🎨 /api/tones/</a> - Tone options
+        </li>
+    </ul>
+</div>
+{% endblock %}

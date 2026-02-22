@@ -145,6 +145,7 @@ Desktop.ini
 # Project specific
 logs/*.log
 staticfiles/
+seed_data.py
 
 # Keep db.sqlite3 for grading (contains test data)
 # db.sqlite3

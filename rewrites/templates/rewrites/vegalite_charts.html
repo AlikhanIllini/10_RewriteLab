@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} | RewriteLab{% endblock %}
+
+{% block extra_css %}
+<!-- Vega-Lite dependencies -->
+<script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+<style>
+    .vega-chart-container {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    .vega-chart-container h3 {
+        margin-bottom: 1rem;
+        color: #2d3748;
+    }
+    .chart-wrapper {
+        min-height: 400px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .api-url {
+        background: #f7fafc;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+        word-break: break-all;
+    }
+    .vega-spec {
+        background: #1a202c;
+        color: #68d391;
+        padding: 1rem;
+        border-radius: 8px;
+        font-family: monospace;
+        font-size: 0.8rem;
+        overflow-x: auto;
+        white-space: pre;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h2>{{ title }}</h2>
+
+<div class="view-type">
+    <strong>A4 Part 1.2:</strong> Vega-Lite charts using internal API data
+</div>
+
+<!-- ==========================================================================
+     CHART 1: BAR CHART - Sessions by Context
+     ========================================================================== -->
+<div class="vega-chart-container">
+    <h3>📊 Bar Chart: Sessions by Writing Context</h3>
+    <p class="text-muted">Aggregated summary of sessions grouped by writing context.</p>
+    <div class="api-url">
+        <strong>API URL:</strong> <a href="{{ api_context_url }}" target="_blank">{{ api_context_url }}</a>
+    </div>
+    <div class="chart-wrapper">
+        <div id="bar-chart"></div>
+    </div>
+
+    <details>
+        <summary style="cursor: pointer; color: #667eea; margin-top: 1rem;">View Vega-Lite Specification</summary>
+        <pre class="vega-spec" id="bar-chart-spec"></pre>
+    </details>
+</div>
+
+<!-- ==========================================================================
+     CHART 2: LINE CHART - Sessions Over Time
+     ========================================================================== -->
+<div class="vega-chart-container">
+    <h3>📈 Line Chart: Sessions Over Time</h3>
+    <p class="text-muted">Timeline showing session creation trends.</p>
+    <div class="api-url">
+        <strong>API URL:</strong> <a href="{{ api_timeline_url }}" target="_blank">{{ api_timeline_url }}</a>
+    </div>
+    <div class="chart-wrapper">
+        <div id="line-chart"></div>
+    </div>
+
+    <details>
+        <summary style="cursor: pointer; color: #667eea; margin-top: 1rem;">View Vega-Lite Specification</summary>
+        <pre class="vega-spec" id="line-chart-spec"></pre>
+    </details>
+</div>
+
+<!-- ==========================================================================
+     TECHNICAL NOTES
+     ========================================================================== -->
+<div class="card" style="background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);">
+    <h3>🔧 Implementation Notes</h3>
+    <ul style="line-height: 2;">
+        <li><strong>Data Source:</strong> Charts use <code>data: { url: "API_URL" }</code> - not inline data</li>
+        <li><strong>API Format:</strong> Simple JSON arrays optimized for Vega-Lite</li>
+        <li><strong>Embedding:</strong> Charts rendered using vega-embed library</li>
+        <li><strong>Endpoints:</strong>
+            <ul>
+                <li><code>/api/chart/context/</code> - Bar chart data</li>
+                <li><code>/api/chart/timeline/</code> - Line chart data</li>
+                <li><code>/api/summary/</code> - Combined summary data</li>
+            </ul>
+        </li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Bar Chart Specification
+    const barChartSpec = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        "title": "Rewrite Sessions by Writing Context",
+        "width": 500,
+        "height": 300,
+        "data": {
+            "url": "{{ api_context_url }}"
+        },
+        "mark": {
+            "type": "bar",
+            "cornerRadiusEnd": 4,
+            "color": "#667eea"
+        },
+        "encoding": {
+            "x": {
+                "field": "context",
+                "type": "nominal",
+                "axis": {"labelAngle": -45, "title": "Writing Context"}
+            },
+            "y": {
+                "field": "sessions",
+                "type": "quantitative",
+                "axis": {"title": "Number of Sessions"}
+            },
+            "tooltip": [
+                {"field": "context", "type": "nominal", "title": "Context"},
+                {"field": "sessions", "type": "quantitative", "title": "Sessions"}
+            ]
+        }
+    };
+
+    // Line Chart Specification
+    const lineChartSpec = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        "title": "Sessions Created Over Time",
+        "width": 500,
+        "height": 300,
+        "data": {
+            "url": "{{ api_timeline_url }}"
+        },
+        "mark": {
+            "type": "line",
+            "point": true,
+            "color": "#764ba2"
+        },
+        "encoding": {
+            "x": {
+                "field": "date",
+                "type": "temporal",
+                "axis": {"title": "Date", "format": "%b %d"}
+            },
+            "y": {
+                "field": "sessions",
+                "type": "quantitative",
+                "axis": {"title": "Sessions Created"}
+            },
+            "tooltip": [
+                {"field": "date", "type": "temporal", "title": "Date"},
+                {"field": "sessions", "type": "quantitative", "title": "Sessions"}
+            ]
+        }
+    };
+
+    // Embed charts
+    vegaEmbed('#bar-chart', barChartSpec, {actions: true})
+        .then(function(result) {
+            document.getElementById('bar-chart-spec').textContent = JSON.stringify(barChartSpec, null, 2);
+        })
+        .catch(console.error);
+
+    vegaEmbed('#line-chart', lineChartSpec, {actions: true})
+        .then(function(result) {
+            document.getElementById('line-chart-spec').textContent = JSON.stringify(lineChartSpec, null, 2);
+        })
+        .catch(console.error);
+</script>
+{% endblock %}

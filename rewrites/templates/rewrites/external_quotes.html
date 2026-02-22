@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} | RewriteLab{% endblock %}
+
+{% block content %}
+<h2>{{ title }}</h2>
+
+<div class="view-type">
+    <strong>A4 Part 2:</strong> External API Integration (Quotable API - keyless)
+</div>
+
+<!-- ==========================================================================
+     SEARCH FORM
+     ========================================================================== -->
+<div class="search-section">
+    <h3>🔍 Search Writing Inspiration</h3>
+    <p class="text-muted mb-2">Find quotes by tag to inspire your writing. Uses the Quotable API.</p>
+
+    <form method="GET" action="{% url 'rewrites:external_quotes' %}" class="form-inline">
+        <div class="form-group">
+            <label for="q">Quote Tag</label>
+            <input type="text" id="q" name="q" value="{{ query }}"
+                   class="form-control" placeholder="e.g., wisdom, technology, creativity">
+        </div>
+        <button type="submit" class="btn btn-primary">🔍 Search Quotes</button>
+    </form>
+
+    <p class="form-help mt-2">
+        Popular tags: wisdom, technology, creativity, success, life, happiness, inspirational
+    </p>
+</div>
+
+<!-- ==========================================================================
+     ERROR MESSAGE
+     ========================================================================== -->
+{% if error_message %}
+<div class="card" style="background: linear-gradient(135deg, #fed7d7 0%, #fff5f5 100%); border-color: #fc8181;">
+    <h3 style="color: #c53030; border: none; padding: 0;">⚠️ API Error</h3>
+    <p style="color: #c53030;">{{ error_message }}</p>
+</div>
+{% endif %}
+
+<!-- ==========================================================================
+     EXTERNAL API RESULTS (QUOTES)
+     ========================================================================== -->
+<div class="card">
+    <h3>💡 Quotes for "{{ query }}"</h3>
+
+    {% for quote in quotes %}
+    <div style="border-left: 4px solid #667eea; padding: 1rem; margin-bottom: 1rem; background: #f7fafc; border-radius: 0 8px 8px 0;">
+        <p style="font-size: 1.1rem; font-style: italic; color: #2d3748; margin-bottom: 0.5rem;">
+            "{{ quote.content }}"
+        </p>
+        <p style="text-align: right; color: #718096; margin: 0;">
+            — {{ quote.author }}
+        </p>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <h3>No Quotes Found</h3>
+        <p>No quotes matched the tag "{{ query }}". Try a different tag.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- ==========================================================================
+     COMBINED WITH INTERNAL DATA
+     ========================================================================== -->
+<div class="card">
+    <h3>📝 Your Recent Sessions (Internal Data)</h3>
+    <p class="text-muted">Demonstrating triangulation of external + internal data</p>
+
+    <div class="stats" style="margin: 1rem 0;">
+        <div class="stat-card">
+            <div class="stat-value">{{ session_count }}</div>
+            <div class="stat-label">Total Sessions</div>
+        </div>
+    </div>
+
+    {% for session in sessions %}
+    <div class="session-item">
+        <div class="text-preview">
+            <a href="{{ session.get_absolute_url }}">
+                {{ session.original_text|truncatewords:25 }}
+            </a>
+        </div>
+        <div class="session-meta">
+            <span class="badge badge-context">{{ session.context.name }}</span>
+            <span class="badge badge-tone">{{ session.tone.name }}</span>
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <h3>No Sessions Yet</h3>
+        <p>Create some rewrite sessions to see them here.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- ==========================================================================
+     API ENDPOINT INFO
+     ========================================================================== -->
+<div class="card" style="background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);">
+    <h3>🔧 Technical Implementation</h3>
+    <ul style="line-height: 2;">
+        <li><strong>External API:</strong> <a href="https://api.quotable.io" target="_blank">Quotable API</a> (no API key required)</li>
+        <li><strong>Request Method:</strong> <code>requests.get()</code> with <code>params=...</code>, <code>timeout=5</code></li>
+        <li><strong>Error Handling:</strong> <code>.raise_for_status()</code> with try/except</li>
+        <li><strong>Combined API:</strong> <a href="{% url 'rewrites:api_external_quotes' %}?q={{ query }}">JSON endpoint</a> merges external + internal data</li>
+    </ul>
+
+    <h4 class="mt-2">API Endpoint:</h4>
+    <div class="api-endpoint">
+        <span class="api-method">GET</span>
+        <a href="{% url 'rewrites:api_external_quotes' %}?q={{ query }}">/api/external/quotes/?q={{ query }}</a>
+    </div>
+</div>
+{% endblock %}

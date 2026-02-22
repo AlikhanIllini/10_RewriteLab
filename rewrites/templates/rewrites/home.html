@@ -26,11 +26,45 @@
 </div>
 
 <!-- ==========================================================================
+     ASSIGNMENT 4 FEATURES (NEW)
+     ========================================================================== -->
+<div class="card" style="border: 2px solid #667eea;">
+    <h2>🆕 Assignment 4 Features</h2>
+    <p>New functionality: Vega-Lite charts, External API, Exports, and Deployment-ready</p>
+
+    <div class="grid-4">
+        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);">
+            <h3 style="color: #667eea;">📈 Vega-Lite Charts</h3>
+            <p style="font-size: 0.875rem; color: #718096;">Interactive charts from internal API data</p>
+            <a href="{% url 'rewrites:vegalite_charts' %}">View Charts →</a>
+        </div>
+
+        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);">
+            <h3 style="color: #667eea;">💡 External API</h3>
+            <p style="font-size: 0.875rem; color: #718096;">Quotes API integration (keyless)</p>
+            <a href="{% url 'rewrites:external_quotes' %}">Get Inspiration →</a>
+        </div>
+
+        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);">
+            <h3 style="color: #667eea;">📋 Reports & Exports</h3>
+            <p style="font-size: 0.875rem; color: #718096;">CSV/JSON exports with summaries</p>
+            <a href="{% url 'rewrites:reports' %}">View Reports →</a>
+        </div>
+
+        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);">
+            <h3 style="color: #667eea;">🔌 Chart APIs</h3>
+            <p style="font-size: 0.875rem; color: #718096;">Clean JSON for Vega-Lite</p>
+            <a href="{% url 'rewrites:api_summary' %}">API Summary →</a>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================================================
      ASSIGNMENT 3 FEATURES
      ========================================================================== -->
 <div class="card">
     <h2>🚀 Assignment 3 Features</h2>
-    <p>This project demonstrates Django's data-driven capabilities:</p>
+    <p>Django's data-driven capabilities:</p>
 
     <div class="grid-4">
         <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
@@ -63,13 +97,16 @@
     <h2>📋 Quick Links</h2>
     <div class="grid-2">
         <div>
-            <h3>Forms & Input</h3>
+            <h3>Data & Reports</h3>
             <ul style="list-style: none; padding: 0;">
                 <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
-                    <a href="{% url 'rewrites:search' %}">🔍 Search (GET & POST Forms)</a>
+                    <a href="{% url 'rewrites:reports' %}">📋 Reports & Exports</a>
                 </li>
                 <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
-                    <a href="{% url 'rewrites:session_search' %}">✨ Create Session (CBV with GET/POST)</a>
+                    <a href="{% url 'rewrites:export_sessions_csv' %}">📄 Export Sessions (CSV)</a>
+                </li>
+                <li style="padding: 0.5rem 0;">
+                    <a href="{% url 'rewrites:export_sessions_json' %}">📋 Export Sessions (JSON)</a>
                 </li>
             </ul>
         </div>
@@ -77,49 +114,18 @@
             <h3>API Endpoints</h3>
             <ul style="list-style: none; padding: 0;">
                 <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
-                    <a href="{% url 'rewrites:api_sessions' %}">📦 /api/sessions/</a>
+                    <a href="{% url 'rewrites:api_summary' %}">📊 /api/summary/</a> (Vega-Lite ready)
                 </li>
                 <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
-                    <a href="{% url 'rewrites:api_contexts' %}">📁 /api/contexts/</a>
+                    <a href="{% url 'rewrites:api_chart_context' %}">📈 /api/chart/context/</a>
                 </li>
                 <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
-                    <a href="{% url 'rewrites:api_tones' %}">🎨 /api/tones/</a>
+                    <a href="{% url 'rewrites:api_chart_timeline' %}">📉 /api/chart/timeline/</a>
                 </li>
                 <li style="padding: 0.5rem 0;">
-                    <a href="{% url 'rewrites:api_demo' %}?format=json">🔀 HttpResponse vs JsonResponse Demo</a>
+                    <a href="{% url 'rewrites:api_external_quotes' %}?q=wisdom">🌐 /api/external/quotes/</a>
                 </li>
             </ul>
-        </div>
-    </div>
-</div>
-
-<div class="card">
-    <h2>🔧 View Types Demo</h2>
-    <p>Four different Django view patterns (from Assignment 2):</p>
-
-    <div class="grid-4">
-        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
-            <h3 style="color: #667eea;">1. HttpResponse FBV</h3>
-            <p style="font-size: 0.875rem; color: #718096;">Manual template loading with loader.get_template()</p>
-            <a href="{% url 'rewrites:session_manual' %}">View Demo →</a>
-        </div>
-
-        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
-            <h3 style="color: #667eea;">2. render() FBV</h3>
-            <p style="font-size: 0.875rem; color: #718096;">Shortcut function for cleaner code</p>
-            <a href="{% url 'rewrites:session_render' %}">View Demo →</a>
-        </div>
-
-        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
-            <h3 style="color: #667eea;">3. Base CBV</h3>
-            <p style="font-size: 0.875rem; color: #718096;">Class-based view inheriting from View</p>
-            <a href="{% url 'rewrites:session_cbv_base' %}">View Demo →</a>
-        </div>
-
-        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
-            <h3 style="color: #667eea;">4. Generic ListView</h3>
-            <p style="font-size: 0.875rem; color: #718096;">Django's built-in generic view</p>
-            <a href="{% url 'rewrites:session_cbv_generic' %}">View Demo →</a>
         </div>
     </div>
 </div>

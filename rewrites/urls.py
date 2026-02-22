@@ -35,7 +35,7 @@ urlpatterns = [
     path('sessions/search/', views.SessionSearchView.as_view(), name='session_search'),  # CBV with GET/POST
 
     # ==========================================================================
-    # ANALYTICS & CHARTS (Section 4)
+    # ANALYTICS & CHARTS (Section 4 - Matplotlib)
     # ==========================================================================
     path('analytics/', views.analytics, name='analytics'),
     path('charts/sessions-by-context.png', views.chart_sessions_by_context, name='chart_context'),
@@ -51,4 +51,36 @@ urlpatterns = [
     path('api/contexts/', views.api_contexts, name='api_contexts'),
     path('api/tones/', views.api_tones, name='api_tones'),
     path('api/demo/', views.demo_http_vs_json, name='api_demo'),  # HttpResponse vs JsonResponse demo
+
+    # ==========================================================================
+    # A4 PART 1: INTERNAL API FOR VEGA-LITE CHARTS
+    # ==========================================================================
+    path('api/summary/', views.api_summary, name='api_summary'),  # Clean summary endpoint
+    path('api/chart/context/', views.api_chart_data_context, name='api_chart_context'),  # Bar chart data
+    path('api/chart/timeline/', views.api_chart_data_timeline, name='api_chart_timeline'),  # Line chart data
+    path('api/chart/quality/', views.api_chart_data_quality, name='api_chart_quality'),  # Quality data
+
+    # ==========================================================================
+    # A4 PART 1.2: VEGA-LITE CHARTS PAGE
+    # ==========================================================================
+    path('vega-lite/', views.vegalite_charts, name='vegalite_charts'),
+
+    # ==========================================================================
+    # A4 PART 2: EXTERNAL API INTEGRATION
+    # ==========================================================================
+    path('external/quotes/', views.external_api_quotes, name='external_quotes'),  # HTML page
+    path('api/external/quotes/', views.api_external_quotes, name='api_external_quotes'),  # JSON API
+
+    # ==========================================================================
+    # A4 PART 3: EXPORTS (CSV & JSON)
+    # ==========================================================================
+    path('export/sessions/csv/', views.export_sessions_csv, name='export_sessions_csv'),
+    path('export/sessions/json/', views.export_sessions_json, name='export_sessions_json'),
+    path('export/results/csv/', views.export_results_csv, name='export_results_csv'),
+    path('export/results/json/', views.export_results_json, name='export_results_json'),
+
+    # ==========================================================================
+    # A4 PART 3: REPORTS PAGE
+    # ==========================================================================
+    path('reports/', views.reports, name='reports'),
 ]

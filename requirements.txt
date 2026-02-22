@@ -1,7 +1,8 @@
 # RewriteLab Dependencies
+# Generated for PythonAnywhere deployment
 
 # Django Framework
-Django>=4.2
+Django>=4.2,<5.0
 
 # Environment Variables
 python-dotenv>=1.0.0
@@ -9,9 +10,9 @@ python-dotenv>=1.0.0
 # Django Extensions (for development tools)
 django-extensions>=3.2.0
 
-# Database visualization (optional)
-pydot>=2.0.0
-
 # Data Visualization (A3 Section 4)
 matplotlib>=3.8.0
+
+# HTTP Requests (A4 External API)
+requests>=2.31.0
 

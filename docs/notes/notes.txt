@@ -166,3 +166,93 @@ The `get_absolute_url()` method provides a canonical way to get the URL for a mo
 **Section 3:** Any page (CSS applied globally) - recommend /analytics/ for charts
 **Section 6:** /api/sessions/ for JSON output
 
+---
+
+### Week 4 (Assignment 4: APIs, Vega-Lite Charts, Exports, Deployment)
+**Date:** February 2026
+
+**Completed:**
+
+#### Part 1: Internal API for Vega-Lite Charts
+- Created clean JSON API endpoints for chart data:
+  - `/api/summary/` - Aggregated summary data (Vega-Lite ready)
+  - `/api/chart/context/` - Sessions by context (bar chart data)
+  - `/api/chart/timeline/` - Sessions over time (line chart data)
+  - `/api/chart/quality/` - Results by quality
+- Output format: Simple JSON arrays optimized for Vega-Lite
+
+#### Part 1.2: Vega-Lite Charts
+- Created `/vega-lite/` page with two embedded charts:
+  1. Bar Chart: Sessions by Writing Context
+  2. Line Chart: Sessions Created Over Time
+- Charts use `data: { url: "API_URL" }` - not inline data
+- Used vega-embed library for rendering
+- Vega-Lite specifications visible in expandable sections
+
+#### Part 2: External API Integration
+- Integrated Quotable API (https://api.quotable.io) - keyless
+- HTML page at `/external/quotes/` with search functionality
+- JSON API at `/api/external/quotes/` combining external + internal data
+- Implementation:
+  - `requests.get()` with `params=...`
+  - `timeout=5` for safety
+  - `.raise_for_status()` for error handling
+  - try/except for graceful error handling
+
+#### Part 3: CSV and JSON Exports
+- Sessions CSV Export: `/export/sessions/csv/`
+  - Content-Type: text/csv
+  - Content-Disposition with timestamped filename
+  - Header row + data rows from DB
+- Sessions JSON Export: `/export/sessions/json/`
+  - Pretty JSON with indent=2
+  - Metadata: generated_at, record_count
+  - Content-Disposition for download
+- Results CSV/JSON exports also available
+- Reports page at `/reports/` with:
+  - Grouped summaries (by context, tone, quality)
+  - Totals row
+  - Export buttons for CSV and JSON
+
+#### Part 4: Deployment Preparation
+- Static files configured:
+  - STATIC_URL = 'static/'
+  - STATICFILES_DIRS = [BASE_DIR / 'static']
+  - STATIC_ROOT = BASE_DIR / 'staticfiles'
+- .gitignore updated:
+  - staticfiles/ ignored
+  - db.sqlite3 NOT ignored (required for grading)
+- requirements.txt updated for PythonAnywhere
+- Code cleanup completed
+
+**Files created/modified:**
+- rewrites/views.py - Added 10+ new views
+- rewrites/urls.py - Added 12 new URL patterns
+- rewrites/templates/rewrites/vegalite_charts.html
+- rewrites/templates/rewrites/external_quotes.html
+- rewrites/templates/rewrites/reports.html
+- templates/base.html - Updated navigation
+- requirements.txt - Updated dependencies
+
+**API Endpoints Summary:**
+| Endpoint | Purpose |
+|----------|---------|
+| /api/summary/ | Aggregated data for Vega-Lite |
+| /api/chart/context/ | Bar chart data |
+| /api/chart/timeline/ | Line chart data |
+| /api/external/quotes/ | External + internal data |
+| /export/sessions/csv/ | CSV download |
+| /export/sessions/json/ | JSON download |
+
+---
+
+## Deployment Checklist (PythonAnywhere)
+1. Push to GitHub (including db.sqlite3)
+2. Clone/pull on PythonAnywhere
+3. Create virtual environment
+4. Install requirements: pip install -r requirements.txt
+5. Run collectstatic: python manage.py collectstatic
+6. Configure WSGI file
+7. Set ALLOWED_HOSTS in production.py
+8. Test all endpoints
+

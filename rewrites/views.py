@@ -9,15 +9,21 @@ This module implements multiple Django view patterns:
 5. Search views (GET and POST)
 6. Analytics views with charts
 7. API views with JSON responses
+8. A4: Vega-Lite charts, External API, CSV/JSON exports
 """
 
+import csv
+import json
+from datetime import datetime
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 from django.template import loader
 from django.views import View
 from django.views.generic import ListView, DetailView
 from django.db.models import Count, Q
+from django.utils import timezone
 import io
+import requests
 import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend
 import matplotlib.pyplot as plt
@@ -779,5 +785,452 @@ def demo_http_vs_json(request):
         # JsonResponse with application/json content type
         data['note'] = 'Content-Type: application/json'
         return JsonResponse(data)
+
+
+# =============================================================================
+# A4 PART 1: INTERNAL API FOR VEGA-LITE CHARTS
+# =============================================================================
+
+def api_summary(request):
+    """
+    Clean internal JSON API endpoint for Vega-Lite charts.
+
+    URL: /api/summary/
+    Returns simple JSON format optimized for Vega-Lite visualization.
+
+    Query Parameters:
+    - format: 'json' (default) or 'csv'
+    """
+    # Get aggregated data by context
+    sessions_by_context = RewriteSession.objects.values('context__name').annotate(
+        count=Count('id')
+    ).order_by('context__name')
+
+    # Get aggregated data by tone
+    sessions_by_tone = RewriteSession.objects.values('tone__name').annotate(
+        count=Count('id')
+    ).order_by('tone__name')
+
+    # Get sessions over time (by date)
+    sessions_by_date = RewriteSession.objects.extra(
+        select={'date': 'date(created_at)'}
+    ).values('date').annotate(count=Count('id')).order_by('date')
+
+    # Build simple array format for Vega-Lite
+    context_data = [
+        {'category': item['context__name'], 'count': item['count'], 'type': 'context'}
+        for item in sessions_by_context
+    ]
+
+    tone_data = [
+        {'category': item['tone__name'], 'count': item['count'], 'type': 'tone'}
+        for item in sessions_by_tone
+    ]
+
+    date_data = [
+        {'date': str(item['date']), 'count': item['count']}
+        for item in sessions_by_date
+    ]
+
+    format_type = request.GET.get('format', 'json')
+
+    if format_type == 'csv':
+        # Return CSV format
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="summary.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(['category', 'count', 'type'])
+        for item in context_data + tone_data:
+            writer.writerow([item['category'], item['count'], item['type']])
+
+        return response
+
+    # Return JSON (default) - simple array format for Vega-Lite
+    data = {
+        'by_context': context_data,
+        'by_tone': tone_data,
+        'by_date': date_data,
+        'totals': {
+            'sessions': RewriteSession.objects.count(),
+            'results': RewriteResult.objects.count(),
+            'contexts': RewriteContext.objects.count(),
+            'tones': ToneOption.objects.count(),
+        }
+    }
+
+    return JsonResponse(data)
+
+
+def api_chart_data_context(request):
+    """
+    Simple JSON array endpoint for Vega-Lite bar chart (sessions by context).
+
+    URL: /api/chart/context/
+    Returns: Simple array format ideal for Vega-Lite
+    """
+    data = RewriteSession.objects.values('context__name').annotate(
+        count=Count('id')
+    ).order_by('-count')
+
+    # Simple array format for Vega-Lite
+    result = [
+        {'context': item['context__name'], 'sessions': item['count']}
+        for item in data
+    ]
+
+    return JsonResponse(result, safe=False)
+
+
+def api_chart_data_timeline(request):
+    """
+    Simple JSON array endpoint for Vega-Lite line/scatter chart (sessions over time).
+
+    URL: /api/chart/timeline/
+    Returns: Simple array format with date and count
+    """
+    # Get sessions grouped by creation date
+    data = RewriteSession.objects.extra(
+        select={'date': 'date(created_at)'}
+    ).values('date').annotate(count=Count('id')).order_by('date')
+
+    # Simple array format for Vega-Lite
+    result = [
+        {'date': str(item['date']), 'sessions': item['count']}
+        for item in data
+    ]
+
+    return JsonResponse(result, safe=False)
+
+
+def api_chart_data_quality(request):
+    """
+    Simple JSON array endpoint for results by quality.
+
+    URL: /api/chart/quality/
+    """
+    data = RewriteResult.objects.values('quality_score').annotate(
+        count=Count('id')
+    ).order_by('quality_score')
+
+    result = [
+        {'quality': item['quality_score'], 'count': item['count']}
+        for item in data
+    ]
+
+    return JsonResponse(result, safe=False)
+
+
+# =============================================================================
+# A4 PART 1.2: VEGA-LITE CHART PAGES
+# =============================================================================
+
+def vegalite_charts(request):
+    """
+    Page displaying Vega-Lite charts embedded in HTML.
+
+    URL: /vega-lite/
+    """
+    # Build the API URL based on the request
+    api_base = request.build_absolute_uri('/api/chart/')
+
+    context = {
+        'title': 'Vega-Lite Charts',
+        'api_context_url': request.build_absolute_uri('/api/chart/context/'),
+        'api_timeline_url': request.build_absolute_uri('/api/chart/timeline/'),
+    }
+    return render(request, 'rewrites/vegalite_charts.html', context)
+
+
+# =============================================================================
+# A4 PART 2: EXTERNAL API INTEGRATION
+# =============================================================================
+
+def external_api_quotes(request):
+    """
+    External API integration - Fetches quotes/advice to combine with our data.
+    Uses the Quotable API (https://api.quotable.io) - no API key required.
+
+    URL: /external/quotes/
+    Query params: ?q=tag (e.g., ?q=wisdom, ?q=technology)
+    """
+    query = request.GET.get('q', 'wisdom')
+
+    try:
+        # Call external API with timeout and error handling
+        response = requests.get(
+            'https://api.quotable.io/quotes',
+            params={'tags': query, 'limit': 5},
+            timeout=5
+        )
+        response.raise_for_status()
+
+        external_data = response.json()
+        quotes = external_data.get('results', [])
+
+    except requests.exceptions.Timeout:
+        quotes = []
+        error_message = 'External API timed out'
+    except requests.exceptions.RequestException as e:
+        quotes = []
+        error_message = f'External API error: {str(e)}'
+    else:
+        error_message = None
+
+    # Combine with internal data - get related sessions based on tone
+    # This demonstrates triangulating external + internal data
+    internal_sessions = RewriteSession.objects.select_related('context', 'tone').all()[:5]
+
+    context = {
+        'title': 'Writing Inspiration',
+        'query': query,
+        'quotes': quotes,
+        'error_message': error_message,
+        'sessions': internal_sessions,
+        'session_count': RewriteSession.objects.count(),
+    }
+
+    return render(request, 'rewrites/external_quotes.html', context)
+
+
+def api_external_quotes(request):
+    """
+    API endpoint that combines external API data with internal analytics.
+
+    URL: /api/external/quotes/
+    Query params: ?q=tag
+    """
+    query = request.GET.get('q', 'wisdom')
+
+    try:
+        response = requests.get(
+            'https://api.quotable.io/quotes',
+            params={'tags': query, 'limit': 3},
+            timeout=5
+        )
+        response.raise_for_status()
+        external_data = response.json()
+        quotes = [
+            {'content': q['content'], 'author': q['author']}
+            for q in external_data.get('results', [])
+        ]
+        error = None
+    except requests.exceptions.RequestException as e:
+        quotes = []
+        error = str(e)
+
+    # Combine with internal aggregation
+    internal_stats = {
+        'total_sessions': RewriteSession.objects.count(),
+        'completed_sessions': RewriteSession.objects.filter(is_completed=True).count(),
+        'contexts': list(RewriteContext.objects.values_list('name', flat=True)),
+    }
+
+    data = {
+        'query': query,
+        'external_quotes': quotes,
+        'internal_stats': internal_stats,
+        'error': error,
+        'generated_at': timezone.now().isoformat(),
+    }
+
+    return JsonResponse(data)
+
+
+# =============================================================================
+# A4 PART 3: CSV AND JSON EXPORTS
+# =============================================================================
+
+def export_sessions_csv(request):
+    """
+    Export all sessions as a downloadable CSV file.
+
+    URL: /export/sessions/csv/
+    """
+    timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M')
+    filename = f'sessions_{timestamp}.csv'
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    writer = csv.writer(response)
+
+    # Header row
+    writer.writerow([
+        'ID', 'Original Text', 'Context', 'Tone', 'Audience',
+        'Purpose', 'Completed', 'Created At'
+    ])
+
+    # Data rows
+    sessions = RewriteSession.objects.select_related('context', 'tone').order_by('-created_at')
+    for session in sessions:
+        writer.writerow([
+            session.id,
+            session.original_text[:200],  # Truncate for readability
+            session.context.name,
+            session.tone.name,
+            session.audience or '',
+            session.purpose or '',
+            'Yes' if session.is_completed else 'No',
+            session.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+        ])
+
+    return response
+
+
+def export_sessions_json(request):
+    """
+    Export all sessions as a downloadable JSON file with metadata.
+
+    URL: /export/sessions/json/
+    """
+    timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M')
+    filename = f'sessions_{timestamp}.json'
+
+    sessions = RewriteSession.objects.select_related('context', 'tone').order_by('-created_at')
+
+    data = {
+        'generated_at': timezone.now().isoformat(),
+        'record_count': sessions.count(),
+        'sessions': [
+            {
+                'id': s.id,
+                'original_text': s.original_text,
+                'context': s.context.name,
+                'tone': s.tone.name,
+                'audience': s.audience or None,
+                'purpose': s.purpose or None,
+                'is_completed': s.is_completed,
+                'created_at': s.created_at.isoformat(),
+            }
+            for s in sessions
+        ]
+    }
+
+    response = JsonResponse(data, json_dumps_params={'indent': 2})
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    return response
+
+
+def export_results_csv(request):
+    """
+    Export all rewrite results as CSV.
+
+    URL: /export/results/csv/
+    """
+    timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M')
+    filename = f'results_{timestamp}.csv'
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    writer = csv.writer(response)
+    writer.writerow([
+        'ID', 'Session ID', 'Version', 'Rewritten Text', 'Quality Score',
+        'Word Count Original', 'Word Count Rewritten', 'Created At'
+    ])
+
+    results = RewriteResult.objects.select_related('session').order_by('-created_at')
+    for result in results:
+        writer.writerow([
+            result.id,
+            result.session.id,
+            result.version_label,
+            result.rewritten_text[:200],
+            result.quality_score,
+            result.word_count_original,
+            result.word_count_rewritten,
+            result.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+        ])
+
+    return response
+
+
+def export_results_json(request):
+    """
+    Export all rewrite results as JSON with metadata.
+
+    URL: /export/results/json/
+    """
+    timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M')
+    filename = f'results_{timestamp}.json'
+
+    results = RewriteResult.objects.select_related('session').order_by('-created_at')
+
+    data = {
+        'generated_at': timezone.now().isoformat(),
+        'record_count': results.count(),
+        'results': [
+            {
+                'id': r.id,
+                'session_id': r.session.id,
+                'version_label': r.version_label,
+                'rewritten_text': r.rewritten_text,
+                'quality_score': r.quality_score,
+                'change_summary': r.change_summary or None,
+                'word_count_original': r.word_count_original,
+                'word_count_rewritten': r.word_count_rewritten,
+                'created_at': r.created_at.isoformat(),
+            }
+            for r in results
+        ]
+    }
+
+    response = JsonResponse(data, json_dumps_params={'indent': 2})
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    return response
+
+
+# =============================================================================
+# A4 PART 3: REPORTS PAGE
+# =============================================================================
+
+def reports(request):
+    """
+    Reports page with grouped summaries, totals, and export links.
+
+    URL: /reports/
+    """
+    # Sessions grouped by context
+    sessions_by_context = RewriteSession.objects.values('context__name').annotate(
+        total=Count('id'),
+        completed=Count('id', filter=Q(is_completed=True)),
+        pending=Count('id', filter=Q(is_completed=False)),
+    ).order_by('-total')
+
+    # Sessions grouped by tone
+    sessions_by_tone = RewriteSession.objects.values('tone__name').annotate(
+        total=Count('id'),
+        completed=Count('id', filter=Q(is_completed=True)),
+    ).order_by('-total')
+
+    # Results grouped by quality
+    results_by_quality = RewriteResult.objects.values('quality_score').annotate(
+        count=Count('id'),
+        avg_word_change=Avg('word_count_rewritten') - Avg('word_count_original'),
+    ).order_by('quality_score')
+
+    # Totals
+    total_sessions = RewriteSession.objects.count()
+    total_completed = RewriteSession.objects.filter(is_completed=True).count()
+    total_results = RewriteResult.objects.count()
+    total_contexts = RewriteContext.objects.count()
+    total_tones = ToneOption.objects.count()
+
+    context = {
+        'title': 'Reports & Exports',
+        'sessions_by_context': sessions_by_context,
+        'sessions_by_tone': sessions_by_tone,
+        'results_by_quality': results_by_quality,
+        'total_sessions': total_sessions,
+        'total_completed': total_completed,
+        'total_results': total_results,
+        'total_contexts': total_contexts,
+        'total_tones': total_tones,
+    }
+
+    return render(request, 'rewrites/reports.html', context)
 
 
