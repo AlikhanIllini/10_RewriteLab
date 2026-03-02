@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Login | RewriteLab{% endblock %}
+
+{% block content %}
+<div style="max-width: 480px; margin: 2rem auto;">
+    <div class="card">
+        <h2>🔐 Log In</h2>
+
+        {% if messages %}
+        <div style="margin-bottom: 1rem;">
+            {% for message in messages %}
+            <div style="padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 0.5rem;
+                {% if message.tags == 'success' %}background:#f0fff4;border:1px solid #c6f6d5;color:#276749;
+                {% elif message.tags == 'error' %}background:#fff5f5;border:1px solid #fed7d7;color:#9b2c2c;
+                {% else %}background:#ebf8ff;border:1px solid #bee3f8;color:#2b6cb0;{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+
+            {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                <input type="{{ field.field.widget.input_type }}"
+                       name="{{ field.html_name }}"
+                       id="{{ field.id_for_label }}"
+                       class="form-control"
+                       placeholder="{{ field.label }}"
+                       value="{{ field.value|default:'' }}"
+                       {% if field.field.required %}required{% endif %}>
+                {% if field.errors %}
+                <div style="color: #e53e3e; font-size: 0.85rem; margin-top: 0.25rem;">
+                    {% for error in field.errors %}{{ error }}{% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            {% if form.non_field_errors %}
+            <div style="background:#fff5f5;border:1px solid #fed7d7;color:#9b2c2c;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;">
+                {% for error in form.non_field_errors %}{{ error }}<br>{% endfor %}
+            </div>
+            {% endif %}
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
+                Log In
+            </button>
+        </form>
+
+        <p style="text-align: center; margin-top: 1.5rem; color: #718096;">
+            Don't have an account? <a href="{% url 'rewrites:register' %}">Sign up</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Register | RewriteLab{% endblock %}
+
+{% block content %}
+<div style="max-width: 480px; margin: 2rem auto;">
+    <div class="card">
+        <h2>📝 Create Account</h2>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                <div class="form-help">{{ field.help_text|safe }}</div>
+                {% endif %}
+                {% if field.errors %}
+                <div style="color: #e53e3e; font-size: 0.85rem; margin-top: 0.25rem;">
+                    {% for error in field.errors %}{{ error }}<br>{% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            {% if form.non_field_errors %}
+            <div style="background:#fff5f5;border:1px solid #fed7d7;color:#9b2c2c;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;">
+                {% for error in form.non_field_errors %}{{ error }}<br>{% endfor %}
+            </div>
+            {% endif %}
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
+                Create Account
+            </button>
+        </form>
+
+        <p style="text-align: center; margin-top: 1.5rem; color: #718096;">
+            Already have an account? <a href="{% url 'rewrites:login' %}">Log in</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
+

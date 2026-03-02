@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Session | RewriteLab{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 2rem auto;">
+    <div class="card" style="border: 2px solid #fed7d7;">
+        <h2 style="color: #e53e3e;">🗑️ Delete Session</h2>
+
+        <p>Are you sure you want to delete this session? This action cannot be undone.</p>
+
+        <div style="background: #f7fafc; padding: 1rem; border-radius: 8px; margin: 1rem 0; border: 1px solid #e2e8f0;">
+            <p style="margin-bottom: 0.5rem;"><strong>Original Text:</strong></p>
+            <p style="color: #4a5568;">{{ session.original_text|truncatewords:50 }}</p>
+            <div class="session-meta" style="margin-top: 0.75rem;">
+                <span class="badge badge-context">{{ session.context.name }}</span>
+                <span class="badge badge-tone">{{ session.tone.name }}</span>
+            </div>
+        </div>
+
+        {% if session.results.count %}
+        <p style="color: #e53e3e; font-weight: 600;">
+            ⚠️ This will also delete {{ session.results.count }} generated rewrite{{ session.results.count|pluralize }}.
+        </p>
+        {% endif %}
+
+        <form method="post" style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+            {% csrf_token %}
+            <button type="submit" class="btn" style="background:#e53e3e;color:#fff;">
+                Yes, Delete
+            </button>
+            <a href="{% url 'rewrites:session_detail' session.pk %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

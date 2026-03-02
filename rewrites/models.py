@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from django.core.validators import MinLengthValidator
 from django.urls import reverse
 
@@ -102,6 +103,14 @@ class RewriteSession(models.Model):
     original_text = models.TextField(
         validators=[MinLengthValidator(10)],
         help_text="The original text submitted by the user for rewriting"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='rewrite_sessions',
+        null=True,
+        blank=True,
+        help_text="The user who created this session (null for legacy/anonymous)"
     )
     context = models.ForeignKey(
         RewriteContext,

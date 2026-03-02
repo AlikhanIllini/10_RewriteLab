@@ -47,7 +47,12 @@
 {% endif %}
 
 <div class="card">
-    <h2>Rewrite Sessions</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 2px solid #e2e8f0;">
+        <h2 style="margin: 0; padding: 0; border: none;">Rewrite Sessions</h2>
+        {% if user.is_authenticated %}
+        <a href="{% url 'rewrites:session_create' %}" class="btn btn-primary btn-sm">✨ New Session</a>
+        {% endif %}
+    </div>
 
     {% for session in sessions %}
     <div class="session-item">
@@ -74,7 +79,11 @@
     <div class="empty-state">
         <h3>No Rewrite Sessions Found</h3>
         <p>There are no rewrite sessions in the database yet.</p>
-        <p>Go to the <a href="{% url 'admin:index' %}">Admin Panel</a> to create some!</p>
+        {% if user.is_authenticated %}
+        <a href="{% url 'rewrites:session_create' %}" class="btn btn-primary" style="margin-top: 1rem;">✨ Create Your First Session</a>
+        {% else %}
+        <p><a href="{% url 'rewrites:login' %}">Log in</a> to create a session, or go to the <a href="{% url 'admin:index' %}">Admin Panel</a>.</p>
+        {% endif %}
     </div>
     {% endfor %}
 </div>

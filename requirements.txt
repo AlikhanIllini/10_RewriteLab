@@ -16,3 +16,6 @@ matplotlib>=3.8.0
 # HTTP Requests (A4 External API)
 requests>=2.31.0
 
+# OpenAI SDK (LLM rewrite generation)
+openai>=1.0.0
+

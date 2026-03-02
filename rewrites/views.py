@@ -15,11 +15,16 @@ This module implements multiple Django view patterns:
 import csv
 import json
 from datetime import datetime
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.template import loader
 from django.views import View
 from django.views.generic import ListView, DetailView
+from django.views.decorators.http import require_POST
+from django.contrib import messages as django_messages
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import AuthenticationForm
 from django.db.models import Count, Q, Avg
 from django.utils import timezone
 import io
@@ -1235,4 +1240,239 @@ def reports(request):
 
     return render(request, 'rewrites/reports.html', context)
 
+
+# =============================================================================
+# GENERATE REWRITES (LLM)
+# =============================================================================
+
+@require_POST
+def generate_rewrites(request, pk):
+    """
+    Trigger LLM-based rewrite generation for a session.
+
+    POST /sessions/<pk>/generate/
+    On success → redirect to session detail with results visible.
+    On failure → redirect with a friendly error message.
+    """
+    session = get_object_or_404(RewriteSession, pk=pk)
+
+    try:
+        from .services.llm_rewrite import generate_rewrites_for_session
+        results = generate_rewrites_for_session(session)
+        django_messages.success(
+            request,
+            f"Generated {len(results)} rewrites successfully!",
+        )
+    except ValueError as exc:
+        # Missing API key or bad response format
+        django_messages.error(request, f"Rewrite generation failed: {exc}")
+    except Exception as exc:
+        django_messages.error(
+            request,
+            f"An unexpected error occurred: {exc}",
+        )
+
+    return redirect('rewrites:session_detail', pk=session.pk)
+
+
+# =============================================================================
+# AUTHENTICATION VIEWS
+# =============================================================================
+
+def user_login(request):
+    """Login view. Redirects to dashboard on success."""
+    if request.user.is_authenticated:
+        return redirect('rewrites:dashboard')
+
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            django_messages.success(request, f'Welcome back, {user.username}!')
+            next_url = request.GET.get('next', 'rewrites:dashboard')
+            return redirect(next_url)
+    else:
+        form = AuthenticationForm()
+
+    return render(request, 'rewrites/login.html', {
+        'form': form,
+        'title': 'Log In',
+    })
+
+
+def user_register(request):
+    """Registration view. Logs in user automatically after registration."""
+    if request.user.is_authenticated:
+        return redirect('rewrites:dashboard')
+
+    from .forms import UserRegisterForm
+
+    if request.method == 'POST':
+        form = UserRegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            django_messages.success(
+                request,
+                f'Account created! Welcome to RewriteLab, {user.username}.',
+            )
+            return redirect('rewrites:dashboard')
+    else:
+        form = UserRegisterForm()
+
+    return render(request, 'rewrites/register.html', {
+        'form': form,
+        'title': 'Register',
+    })
+
+
+def user_logout(request):
+    """Logout view. Redirects to home."""
+    logout(request)
+    django_messages.success(request, 'You have been logged out.')
+    return redirect('rewrites:home')
+
+
+# =============================================================================
+# USER DASHBOARD
+# =============================================================================
+
+@login_required(login_url='rewrites:login')
+def dashboard(request):
+    """
+    User dashboard showing their sessions and stats.
+
+    URL: /dashboard/
+    """
+    sessions = RewriteSession.objects.filter(
+        user=request.user
+    ).select_related('context', 'tone').order_by('-created_at')
+
+    total = sessions.count()
+    completed = sessions.filter(is_completed=True).count()
+    pending = total - completed
+    total_rewrites = RewriteResult.objects.filter(session__user=request.user).count()
+
+    return render(request, 'rewrites/dashboard.html', {
+        'title': 'Dashboard',
+        'sessions': sessions,
+        'total_sessions': total,
+        'completed_sessions': completed,
+        'pending_sessions': pending,
+        'total_rewrites': total_rewrites,
+    })
+
+
+# =============================================================================
+# SESSION CRUD (Create, Edit, Delete)
+# =============================================================================
+
+@login_required(login_url='rewrites:login')
+def session_create(request):
+    """
+    Create a new RewriteSession.
+
+    POST: validate form, generate session_token, save, redirect to detail.
+    GET: show empty form.
+    """
+    import secrets
+    from .forms import SessionCreateForm
+
+    if request.method == 'POST':
+        form = SessionCreateForm(request.POST)
+        if form.is_valid():
+            session = form.save(commit=False)
+            session.user = request.user
+            session.session_token = secrets.token_hex(32)
+            try:
+                session.save()
+                django_messages.success(request, 'Session created! You can now generate rewrites.')
+                return redirect('rewrites:session_detail', pk=session.pk)
+            except Exception:
+                django_messages.error(
+                    request,
+                    'A session with this exact text, context, and tone already exists.',
+                )
+    else:
+        form = SessionCreateForm()
+
+    return render(request, 'rewrites/session_create.html', {
+        'form': form,
+        'title': 'New Session',
+    })
+
+
+@login_required(login_url='rewrites:login')
+def session_edit(request, pk):
+    """
+    Edit an existing RewriteSession.
+
+    Only the session owner can edit.
+    If context or tone changes, clear existing results and reset completion.
+    """
+    from .forms import SessionCreateForm
+
+    session = get_object_or_404(RewriteSession, pk=pk)
+
+    # Ownership check
+    if session.user and session.user != request.user:
+        django_messages.error(request, 'You do not have permission to edit this session.')
+        return redirect('rewrites:session_detail', pk=pk)
+
+    old_context = session.context_id
+    old_tone = session.tone_id
+
+    if request.method == 'POST':
+        form = SessionCreateForm(request.POST, instance=session)
+        if form.is_valid():
+            updated = form.save(commit=False)
+            # If context or tone changed, reset completion and delete results
+            if updated.context_id != old_context or updated.tone_id != old_tone:
+                updated.is_completed = False
+                updated.save()
+                updated.results.all().delete()
+                django_messages.info(
+                    request,
+                    'Context or tone changed — previous rewrites cleared. Generate new ones.',
+                )
+            else:
+                updated.save()
+                django_messages.success(request, 'Session updated.')
+            return redirect('rewrites:session_detail', pk=session.pk)
+    else:
+        form = SessionCreateForm(instance=session)
+
+    return render(request, 'rewrites/session_edit.html', {
+        'form': form,
+        'session': session,
+        'title': 'Edit Session',
+    })
+
+
+@login_required(login_url='rewrites:login')
+def session_delete(request, pk):
+    """
+    Delete a RewriteSession.
+
+    GET: show confirmation page.
+    POST: delete and redirect to dashboard.
+    Only the session owner can delete.
+    """
+    session = get_object_or_404(RewriteSession, pk=pk)
+
+    # Ownership check
+    if session.user and session.user != request.user:
+        django_messages.error(request, 'You do not have permission to delete this session.')
+        return redirect('rewrites:session_detail', pk=pk)
+
+    if request.method == 'POST':
+        session.delete()
+        django_messages.success(request, 'Session deleted.')
+        return redirect('rewrites:dashboard')
+
+    return render(request, 'rewrites/session_delete.html', {
+        'session': session,
+        'title': 'Delete Session',
+    })
 

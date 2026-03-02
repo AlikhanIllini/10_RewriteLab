@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}New Session | RewriteLab{% endblock %}
+
+{% block content %}
+<h2>✍️ New Rewrite Session</h2>
+
+<p style="color: #718096; margin-bottom: 1.5rem;">
+    Paste your text below, choose a context and tone, then create your session.
+    You can generate AI-powered rewrites after creation.
+</p>
+
+{% if messages %}
+<div style="margin-bottom: 1rem;">
+    {% for message in messages %}
+    <div style="padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 0.5rem;
+        {% if message.tags == 'error' %}background:#fff5f5;border:1px solid #fed7d7;color:#9b2c2c;
+        {% else %}background:#ebf8ff;border:1px solid #bee3f8;color:#2b6cb0;{% endif %}">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="card">
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="{{ form.original_text.id_for_label }}">{{ form.original_text.label }}</label>
+            {{ form.original_text }}
+            {% if form.original_text.help_text %}
+            <div class="form-help">{{ form.original_text.help_text }}</div>
+            {% endif %}
+            {% if form.original_text.errors %}
+            <div style="color: #e53e3e; font-size: 0.85rem; margin-top: 0.25rem;">
+                {% for error in form.original_text.errors %}{{ error }}<br>{% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="{{ form.context.id_for_label }}">{{ form.context.label }}</label>
+                {{ form.context }}
+                {% if form.context.help_text %}
+                <div class="form-help">{{ form.context.help_text }}</div>
+                {% endif %}
+                {% if form.context.errors %}
+                <div style="color: #e53e3e; font-size: 0.85rem; margin-top: 0.25rem;">
+                    {% for error in form.context.errors %}{{ error }}<br>{% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.tone.id_for_label }}">{{ form.tone.label }}</label>
+                {{ form.tone }}
+                {% if form.tone.help_text %}
+                <div class="form-help">{{ form.tone.help_text }}</div>
+                {% endif %}
+                {% if form.tone.errors %}
+                <div style="color: #e53e3e; font-size: 0.85rem; margin-top: 0.25rem;">
+                    {% for error in form.tone.errors %}{{ error }}<br>{% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="{{ form.audience.id_for_label }}">{{ form.audience.label }}</label>
+                {{ form.audience }}
+                {% if form.audience.help_text %}
+                <div class="form-help">{{ form.audience.help_text }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.purpose.id_for_label }}">{{ form.purpose.label }}</label>
+                {{ form.purpose }}
+                {% if form.purpose.help_text %}
+                <div class="form-help">{{ form.purpose.help_text }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+            <button type="submit" class="btn btn-primary">
+                ✨ Create Session
+            </button>
+            <a href="{% url 'rewrites:dashboard' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

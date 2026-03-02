@@ -29,6 +29,30 @@ urlpatterns = [
     path('sessions/<int:pk>/', views.SessionDetailView.as_view(), name='session_detail'),
 
     # ==========================================================================
+    # GENERATE REWRITES (LLM)
+    # ==========================================================================
+    path('sessions/<int:pk>/generate/', views.generate_rewrites, name='generate_rewrites'),
+
+    # ==========================================================================
+    # AUTHENTICATION
+    # ==========================================================================
+    path('login/', views.user_login, name='login'),
+    path('register/', views.user_register, name='register'),
+    path('logout/', views.user_logout, name='logout'),
+
+    # ==========================================================================
+    # USER DASHBOARD
+    # ==========================================================================
+    path('dashboard/', views.dashboard, name='dashboard'),
+
+    # ==========================================================================
+    # SESSION CRUD
+    # ==========================================================================
+    path('sessions/new/', views.session_create, name='session_create'),
+    path('sessions/<int:pk>/edit/', views.session_edit, name='session_edit'),
+    path('sessions/<int:pk>/delete/', views.session_delete, name='session_delete'),
+
+    # ==========================================================================
     # SEARCH & FILTERING (Section 2 + Section 5)
     # ==========================================================================
     path('search/', views.search, name='search'),  # GET & POST search

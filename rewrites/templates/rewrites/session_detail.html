@@ -5,6 +5,19 @@
 {% block content %}
 <h2>{{ title }}</h2>
 
+{% if messages %}
+<div style="margin-bottom: 1rem;">
+    {% for message in messages %}
+    <div style="padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 0.5rem;
+        {% if message.tags == 'success' %}background:#f0fff4;border:1px solid #c6f6d5;color:#276749;
+        {% elif message.tags == 'error' %}background:#fff5f5;border:1px solid #fed7d7;color:#9b2c2c;
+        {% else %}background:#ebf8ff;border:1px solid #bee3f8;color:#2b6cb0;{% endif %}">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
 <div class="view-type">
     <strong>URL Pattern:</strong> /sessions/{{ session.pk }}/ (Detail page with primary key)
 </div>
@@ -39,6 +52,25 @@
 
     <p><strong>Created:</strong> {{ session.created_at }}</p>
     <p><strong>Session Token:</strong> <code>{{ session.session_token|truncatechars:16 }}</code></p>
+
+    <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <form method="post" action="{% url 'rewrites:generate_rewrites' session.pk %}">
+            {% csrf_token %}
+            {% if results %}
+            <button type="submit" class="btn btn-secondary" style="background:#ed8936;border-color:#ed8936;color:#fff;">
+                🔄 Regenerate Rewrites
+            </button>
+            {% else %}
+            <button type="submit" class="btn btn-primary" style="background:#48bb78;border-color:#48bb78;color:#fff;">
+                ✨ Generate Rewrites
+            </button>
+            {% endif %}
+        </form>
+        {% if user.is_authenticated and session.user == user or session.user is None and user.is_authenticated %}
+        <a href="{% url 'rewrites:session_edit' session.pk %}" class="btn btn-secondary">✏️ Edit</a>
+        <a href="{% url 'rewrites:session_delete' session.pk %}" class="btn btn-secondary" style="border-color:#e53e3e;color:#e53e3e;">🗑️ Delete</a>
+        {% endif %}
+    </div>
 </div>
 
 <div class="card">
@@ -52,18 +84,25 @@
                 {{ result.get_quality_score_display }}
             </span>
         </div>
-        <p style="background: #f0fff4; padding: 1rem; border-radius: 8px; border: 1px solid #c6f6d5;">
+        <p style="background: #f0fff4; padding: 1rem; border-radius: 8px; border: 1px solid #c6f6d5;" id="rewrite-{{ result.version_label }}">
             {{ result.rewritten_text }}
         </p>
-        {% if result.change_summary %}
-        <p style="font-size: 0.875rem; color: #718096; margin-top: 0.5rem;">
-            <em>Changes: {{ result.change_summary }}</em>
-        </p>
-        {% endif %}
-        <p style="font-size: 0.75rem; color: #a0aec0;">
-            Word count: {{ result.word_count_original }} → {{ result.word_count_rewritten }}
-            {% if result.is_selected %} | ✓ Selected by user{% endif %}
-        </p>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <div>
+                {% if result.change_summary %}
+                <p style="font-size: 0.875rem; color: #718096; margin: 0;">
+                    <em>Changes: {{ result.change_summary }}</em>
+                </p>
+                {% endif %}
+                <p style="font-size: 0.75rem; color: #a0aec0; margin: 0;">
+                    Word count: {{ result.word_count_original }} → {{ result.word_count_rewritten }}
+                    {% if result.is_selected %} | ✓ Selected by user{% endif %}
+                </p>
+            </div>
+            <button onclick="copyRewrite('{{ result.version_label }}', this)" class="btn btn-sm btn-secondary" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
+                📋 Copy
+            </button>
+        </div>
     </div>
     {% empty %}
     <div class="empty-state">
@@ -84,5 +123,28 @@
 
 <p style="margin-top: 1rem;">
     <a href="{% url 'rewrites:session_cbv_generic' %}" class="btn btn-secondary">← Back to Session List</a>
+    {% if user.is_authenticated %}
+    <a href="{% url 'rewrites:dashboard' %}" class="btn btn-secondary">← Dashboard</a>
+    {% endif %}
 </p>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+function copyRewrite(label, btn) {
+    var el = document.getElementById('rewrite-' + label);
+    if (!el) return;
+    var text = el.innerText.trim();
+    navigator.clipboard.writeText(text).then(function() {
+        var orig = btn.innerHTML;
+        btn.innerHTML = '✓ Copied!';
+        btn.style.color = '#22543d';
+        setTimeout(function() {
+            btn.innerHTML = orig;
+            btn.style.color = '';
+        }, 2000);
+    });
+}
+</script>
+{% endblock %}
+

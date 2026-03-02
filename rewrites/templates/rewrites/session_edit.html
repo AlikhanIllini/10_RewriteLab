@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Session | RewriteLab{% endblock %}
+
+{% block content %}
+<h2>✏️ Edit Session</h2>
+
+<p style="color: #718096; margin-bottom: 1.5rem;">
+    Update your session settings. Note: editing context or tone will clear existing rewrites.
+</p>
+
+<div class="card">
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="{{ form.original_text.id_for_label }}">{{ form.original_text.label }}</label>
+            {{ form.original_text }}
+            {% if form.original_text.help_text %}
+            <div class="form-help">{{ form.original_text.help_text }}</div>
+            {% endif %}
+            {% if form.original_text.errors %}
+            <div style="color: #e53e3e; font-size: 0.85rem; margin-top: 0.25rem;">
+                {% for error in form.original_text.errors %}{{ error }}<br>{% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="{{ form.context.id_for_label }}">{{ form.context.label }}</label>
+                {{ form.context }}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.tone.id_for_label }}">{{ form.tone.label }}</label>
+                {{ form.tone }}
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="{{ form.audience.id_for_label }}">{{ form.audience.label }}</label>
+                {{ form.audience }}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.purpose.id_for_label }}">{{ form.purpose.label }}</label>
+                {{ form.purpose }}
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+            <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+            <a href="{% url 'rewrites:session_detail' session.pk %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
