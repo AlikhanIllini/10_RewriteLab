@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: rewritelab
+    runtime: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn rewritelab_project.wsgi:application"
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: rewritelab_project.settings.production
+      - key: PYTHON_VERSION
+        value: "3.11.6"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: rewritelab-db
+          property: connectionString
+      - key: ALLOWED_HOSTS
+        value: "rewritelab.onrender.com"
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+
+databases:
+  - name: rewritelab-db
+    plan: free
+

@@ -10,7 +10,50 @@ The app now features a fully working **AI-powered rewrite engine** using the Ope
 ✅ **Part 2: Project Foundations + Views + Templates** - Complete  
 ✅ **Part 3: User Input, Analysis, & APIs** - Complete  
 ✅ **Part 4: APIs, Vega-Lite Charts, Exports, Deployment** - Complete  
-✅ **Part 5: LLM Integration, Auth, Session CRUD** - Complete
+✅ **Part 5: LLM Integration, Auth, Session CRUD** - Complete  
+✅ **Part 5.1: Django Auth + Google OAuth + Public API** - Complete
+
+## Assignment 5.1 Features (NEW)
+
+### Part 1: Internal Django Authentication
+- Custom login (`/login/`) and signup (`/register/`) pages
+- Logout functionality (`/logout/`)
+- Configured `LOGIN_URL`, `LOGIN_REDIRECT_URL`, `LOGOUT_REDIRECT_URL`
+- All private pages and API endpoints require login
+- Navigation links hidden for unauthenticated users, visible after login
+- API endpoints return `401 JSON` response instead of redirecting
+
+### Part 2: Google OAuth Integration
+- `django-allauth` configured with Google provider
+- "Continue with Google" button on both login and signup pages
+- Google Cloud credentials loaded from `.env` (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`)
+- Supports both localhost and production redirect URIs
+- Auto-signup enabled for Google OAuth users
+
+### Part 3: Public API + Vega-Lite
+- **Public API endpoint**: `/api/public/context-stats/` — returns sessions by context as flat JSON array
+  - No login required
+  - CORS headers enabled (`Access-Control-Allow-Origin: *`)
+  - Backed by actual database data
+- **Vega-Lite chart**: Bar chart showing sessions per writing context
+  - Pulls data from the public API URL (not inline data)
+  - Spec file: `docs/group-10-vega-lite-API-demo.txt`
+- `/api/summary/` also public with CORS headers
+- All other API endpoints protected (return 401 if not authenticated)
+
+### Protected vs Public Endpoints
+| Endpoint | Auth Required | Description |
+|----------|:---:|-------------|
+| `/api/public/context-stats/` | ❌ | Public - sessions by context (flat JSON) |
+| `/api/summary/` | ❌ | Public - aggregated summary data |
+| `/api/sessions/` | ✅ | Protected - list all sessions |
+| `/api/sessions/<pk>/` | ✅ | Protected - session detail |
+| `/api/contexts/` | ✅ | Protected - writing contexts |
+| `/api/tones/` | ✅ | Protected - tone options |
+| `/api/chart/context/` | ✅ | Protected - chart data |
+| `/api/chart/timeline/` | ✅ | Protected - timeline data |
+| `/api/chart/quality/` | ✅ | Protected - quality data |
+| `/api/external/quotes/` | ✅ | Protected - external quotes |
 
 ## Assignment 5 Features (NEW)
 
@@ -313,6 +356,8 @@ The project demonstrates four Django view patterns:
 |----------|-------------|
 | `SECRET_KEY` | Django secret key |
 | `OPENAI_API_KEY` | OpenAI API key (required for rewrite generation) |
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
 | `ALLOWED_HOSTS` | Comma-separated list of allowed hosts |
 
 ## Testing Credentials

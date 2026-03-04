@@ -25,8 +25,10 @@ from django.contrib import messages as django_messages
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count, Q, Avg
 from django.utils import timezone
+import functools
 import io
 import requests
 import matplotlib
@@ -37,9 +39,27 @@ from .models import RewriteSession, RewriteContext, ToneOption, RewriteResult
 
 
 # =============================================================================
+# HELPERS
+# =============================================================================
+
+def api_login_required(view_func):
+    """Decorator for API endpoints: returns 401 JSON if not authenticated."""
+    @functools.wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return JsonResponse(
+                {'error': 'Authentication required. Please log in.'},
+                status=401,
+            )
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
+# =============================================================================
 # FUNCTION-BASED VIEWS
 # =============================================================================
 
+@login_required(login_url='rewrites:login')
 def session_manual(request):
     """
     View 1: HttpResponse FBV (Manual Template Loading)
@@ -67,6 +87,7 @@ def session_manual(request):
     return HttpResponse(template.render(context, request))
 
 
+@login_required(login_url='rewrites:login')
 def session_list_render(request):
     """
     View 2: render() FBV (Shortcut)
@@ -101,7 +122,7 @@ def session_list_render(request):
 # CLASS-BASED VIEWS
 # =============================================================================
 
-class SessionBaseView(View):
+class SessionBaseView(LoginRequiredMixin, View):
     """
     View 3: Base CBV (inherits from View)
 
@@ -111,6 +132,7 @@ class SessionBaseView(View):
     URL: /rewrites/cbv-base/
     For Grading: This is the Base CBV
     """
+    login_url = 'rewrites:login'
 
     def get(self, request):
         """Handle GET requests."""
@@ -134,7 +156,7 @@ class SessionBaseView(View):
         return render(request, 'rewrites/session_list.html', context)
 
 
-class SessionListView(ListView):
+class SessionListView(LoginRequiredMixin, ListView):
     """
     View 4: Generic CBV (ListView)
 
@@ -144,6 +166,7 @@ class SessionListView(ListView):
     URL: /rewrites/cbv-generic/
     For Grading: This is the Generic CBV (ListView)
     """
+    login_url = 'rewrites:login'
     model = RewriteSession
     template_name = 'rewrites/session_list.html'
     context_object_name = 'sessions'
@@ -162,7 +185,7 @@ class SessionListView(ListView):
         return context
 
 
-class SessionDetailView(DetailView):
+class SessionDetailView(LoginRequiredMixin, DetailView):
     """
     Bonus: Generic CBV (DetailView)
 
@@ -170,6 +193,7 @@ class SessionDetailView(DetailView):
 
     URL: /rewrites/<int:pk>/
     """
+    login_url = 'rewrites:login'
     model = RewriteSession
     template_name = 'rewrites/session_detail.html'
     context_object_name = 'session'
@@ -205,6 +229,7 @@ def home(request):
 # SECTION 2: ORM QUERIES & DATA PRESENTATION
 # =============================================================================
 
+@login_required(login_url='rewrites:login')
 def search(request):
     """
     Search view with both GET and POST forms.
@@ -287,6 +312,7 @@ def search(request):
 # SECTION 4: DATA VISUALIZATION (MATPLOTLIB)
 # =============================================================================
 
+@login_required(login_url='rewrites:login')
 def analytics(request):
     """
     Analytics page showing charts and statistics.
@@ -326,6 +352,7 @@ def analytics(request):
     return render(request, 'rewrites/analytics.html', context)
 
 
+@login_required(login_url='rewrites:login')
 def chart_sessions_by_context(request):
     """
     Generate a bar chart of sessions by context.
@@ -379,6 +406,7 @@ def chart_sessions_by_context(request):
     return HttpResponse(buffer.getvalue(), content_type='image/png')
 
 
+@login_required(login_url='rewrites:login')
 def chart_sessions_by_tone(request):
     """
     Generate a pie chart of sessions by tone.
@@ -427,6 +455,7 @@ def chart_sessions_by_tone(request):
     return HttpResponse(buffer.getvalue(), content_type='image/png')
 
 
+@login_required(login_url='rewrites:login')
 def chart_results_quality(request):
     """
     Generate a horizontal bar chart of results by quality score.
@@ -470,13 +499,14 @@ def chart_results_quality(request):
 # SECTION 5: FORMS & USER INPUT
 # =============================================================================
 
-class SessionSearchView(ListView):
+class SessionSearchView(LoginRequiredMixin, ListView):
     """
     CBV that handles both GET and POST for search functionality.
 
     URL: /sessions/search/
     For Grading: CBV adapted to handle GET (search) and POST (create session)
     """
+    login_url = 'rewrites:login'
     model = RewriteSession
     template_name = 'rewrites/session_search.html'
     context_object_name = 'sessions'
@@ -561,6 +591,7 @@ class SessionSearchView(ListView):
 # SECTION 6: CREATING APIs
 # =============================================================================
 
+@api_login_required
 def api_sessions(request):
     """
     API endpoint to list sessions in JSON format.
@@ -627,6 +658,7 @@ def api_sessions(request):
     return JsonResponse(data, safe=False)
 
 
+@api_login_required
 def api_session_detail(request, pk):
     """
     API endpoint for a single session with results.
@@ -676,13 +708,14 @@ def api_session_detail(request, pk):
     return JsonResponse(data)
 
 
-class APISessionsView(View):
+class APISessionsView(LoginRequiredMixin, View):
     """
     Class-Based API View for sessions.
 
     URL: /api/v2/sessions/
     For Grading: CBV API implementation
     """
+    login_url = 'rewrites:login'
 
     def get(self, request):
         """Handle GET requests - list sessions."""
@@ -707,6 +740,7 @@ class APISessionsView(View):
         return JsonResponse(data)
 
 
+@api_login_required
 def api_contexts(request):
     """
     API endpoint for listing available contexts.
@@ -731,6 +765,7 @@ def api_contexts(request):
     return JsonResponse(data)
 
 
+@api_login_required
 def api_tones(request):
     """
     API endpoint for listing available tones.
@@ -756,6 +791,7 @@ def api_tones(request):
     return JsonResponse(data)
 
 
+@api_login_required
 def demo_http_vs_json(request):
     """
     Demo view showing difference between HttpResponse and JsonResponse.
@@ -864,9 +900,36 @@ def api_summary(request):
         }
     }
 
-    return JsonResponse(data)
+    response = JsonResponse(data)
+    response['Access-Control-Allow-Origin'] = '*'
+    return response
 
 
+def api_public_context_stats(request):
+    """
+    PUBLIC API endpoint - returns sessions by context as a flat JSON array.
+
+    This endpoint does NOT require authentication and includes CORS headers
+    so it can be consumed by external tools (Vega-Lite editor, Python scripts, etc.).
+
+    URL: /api/public/context-stats/
+    Returns: [{"context": "...", "sessions": N}, ...]
+    """
+    data = RewriteSession.objects.values('context__name').annotate(
+        count=Count('id')
+    ).order_by('-count')
+
+    result = [
+        {'context': item['context__name'], 'sessions': item['count']}
+        for item in data
+    ]
+
+    response = JsonResponse(result, safe=False)
+    response['Access-Control-Allow-Origin'] = '*'
+    return response
+
+
+@api_login_required
 def api_chart_data_context(request):
     """
     Simple JSON array endpoint for Vega-Lite bar chart (sessions by context).
@@ -887,6 +950,7 @@ def api_chart_data_context(request):
     return JsonResponse(result, safe=False)
 
 
+@api_login_required
 def api_chart_data_timeline(request):
     """
     Simple JSON array endpoint for Vega-Lite line/scatter chart (sessions over time).
@@ -908,6 +972,7 @@ def api_chart_data_timeline(request):
     return JsonResponse(result, safe=False)
 
 
+@api_login_required
 def api_chart_data_quality(request):
     """
     Simple JSON array endpoint for results by quality.
@@ -930,6 +995,7 @@ def api_chart_data_quality(request):
 # A4 PART 1.2: VEGA-LITE CHART PAGES
 # =============================================================================
 
+@login_required(login_url='rewrites:login')
 def vegalite_charts(request):
     """
     Page displaying Vega-Lite charts embedded in HTML.
@@ -951,6 +1017,7 @@ def vegalite_charts(request):
 # A4 PART 2: EXTERNAL API INTEGRATION
 # =============================================================================
 
+@login_required(login_url='rewrites:login')
 def external_api_quotes(request):
     """
     External API integration - Fetches quotes/advice to combine with our data.
@@ -1001,6 +1068,7 @@ def external_api_quotes(request):
     return render(request, 'rewrites/external_quotes.html', context)
 
 
+@api_login_required
 def api_external_quotes(request):
     """
     API endpoint that combines external API data with internal analytics.
@@ -1048,6 +1116,7 @@ def api_external_quotes(request):
 # A4 PART 3: CSV AND JSON EXPORTS
 # =============================================================================
 
+@login_required(login_url='rewrites:login')
 def export_sessions_csv(request):
     """
     Export all sessions as a downloadable CSV file.
@@ -1085,6 +1154,7 @@ def export_sessions_csv(request):
     return response
 
 
+@login_required(login_url='rewrites:login')
 def export_sessions_json(request):
     """
     Export all sessions as a downloadable JSON file with metadata.
@@ -1120,6 +1190,7 @@ def export_sessions_json(request):
     return response
 
 
+@login_required(login_url='rewrites:login')
 def export_results_csv(request):
     """
     Export all rewrite results as CSV.
@@ -1154,6 +1225,7 @@ def export_results_csv(request):
     return response
 
 
+@login_required(login_url='rewrites:login')
 def export_results_json(request):
     """
     Export all rewrite results as JSON with metadata.
@@ -1194,6 +1266,7 @@ def export_results_json(request):
 # A4 PART 3: REPORTS PAGE
 # =============================================================================
 
+@login_required(login_url='rewrites:login')
 def reports(request):
     """
     Reports page with grouped summaries, totals, and export links.
@@ -1251,8 +1324,8 @@ def generate_rewrites(request, pk):
     Trigger LLM-based rewrite generation for a session.
 
     POST /sessions/<pk>/generate/
-    On success → redirect to session detail with results visible.
-    On failure → redirect with a friendly error message.
+    On success -> redirect to session detail with results visible.
+    On failure -> redirect with a friendly error message.
     """
     session = get_object_or_404(RewriteSession, pk=pk)
 
@@ -1288,7 +1361,7 @@ def user_login(request):
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
-            login(request, user)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             django_messages.success(request, f'Welcome back, {user.username}!')
             next_url = request.GET.get('next', 'rewrites:dashboard')
             return redirect(next_url)
@@ -1312,7 +1385,7 @@ def user_register(request):
         form = UserRegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             django_messages.success(
                 request,
                 f'Account created! Welcome to RewriteLab, {user.username}.',

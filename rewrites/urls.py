@@ -79,7 +79,8 @@ urlpatterns = [
     # ==========================================================================
     # A4 PART 1: INTERNAL API FOR VEGA-LITE CHARTS
     # ==========================================================================
-    path('api/summary/', views.api_summary, name='api_summary'),  # Clean summary endpoint
+    path('api/summary/', views.api_summary, name='api_summary'),  # Clean summary endpoint (PUBLIC)
+    path('api/public/context-stats/', views.api_public_context_stats, name='api_public_context_stats'),  # PUBLIC flat array
     path('api/chart/context/', views.api_chart_data_context, name='api_chart_context'),  # Bar chart data
     path('api/chart/timeline/', views.api_chart_data_timeline, name='api_chart_timeline'),  # Line chart data
     path('api/chart/quality/', views.api_chart_data_quality, name='api_chart_quality'),  # Quality data

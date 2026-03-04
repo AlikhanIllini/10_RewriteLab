@@ -1,0 +1,56 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": "RewriteLab: Sessions by Writing Context",
+  "description": "Bar chart showing the number of rewrite sessions per writing context, pulled from the public API.",
+  "data": {
+    "url": "YOUR_PRODUCTION_URL/api/public/context-stats/"
+  },
+  "mark": {
+    "type": "bar",
+    "cornerRadiusTopLeft": 4,
+    "cornerRadiusTopRight": 4,
+    "tooltip": true
+  },
+  "encoding": {
+    "x": {
+      "field": "context",
+      "type": "nominal",
+      "title": "Writing Context",
+      "axis": {
+        "labelAngle": -30,
+        "labelFontSize": 12,
+        "titleFontSize": 14
+      },
+      "sort": "-y"
+    },
+    "y": {
+      "field": "sessions",
+      "type": "quantitative",
+      "title": "Number of Sessions",
+      "axis": {
+        "labelFontSize": 12,
+        "titleFontSize": 14
+      }
+    },
+    "color": {
+      "field": "context",
+      "type": "nominal",
+      "legend": null,
+      "scale": {
+        "scheme": "tableau10"
+      }
+    }
+  },
+  "width": 500,
+  "height": 350,
+  "config": {
+    "font": "Inter, sans-serif",
+    "title": {
+      "fontSize": 18,
+      "fontWeight": "bold"
+    },
+    "view": {
+      "stroke": null
+    }
+  }
+}

@@ -24,20 +24,19 @@
             {% if user.is_authenticated %}
             <li><a href="{% url 'rewrites:dashboard' %}">📊 Dashboard</a></li>
             <li><a href="{% url 'rewrites:session_create' %}">✨ New Session</a></li>
-            {% endif %}
             <li><a href="{% url 'rewrites:session_cbv_generic' %}">📝 Sessions</a></li>
             <li><a href="{% url 'rewrites:search' %}">🔍 Search</a></li>
             <li><a href="{% url 'rewrites:reports' %}">📋 Reports</a></li>
             <li><a href="{% url 'rewrites:vegalite_charts' %}">📈 Charts</a></li>
             <li><a href="{% url 'rewrites:external_quotes' %}">💡 Inspiration</a></li>
             <li><a href="{% url 'rewrites:api_summary' %}">🔌 API</a></li>
-            {% if user.is_authenticated %}
             <li><a href="{% url 'rewrites:logout' %}">🚪 Logout ({{ user.username }})</a></li>
-            {% else %}
-            <li><a href="{% url 'rewrites:login' %}">🔐 Login</a></li>
-            {% endif %}
             {% if user.is_staff %}
             <li><a href="{% url 'admin:index' %}">⚙️ Admin</a></li>
+            {% endif %}
+            {% else %}
+            <li><a href="{% url 'rewrites:login' %}">🔐 Login</a></li>
+            <li><a href="{% url 'rewrites:register' %}">📝 Sign Up</a></li>
             {% endif %}
         </ul>
     </nav>
