@@ -14,7 +14,10 @@ from .base import *
 DEBUG = False
 
 # Define allowed hosts from environment or set specific domains
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', '').split(',') if h.strip()]
+
+# Allow Railway's internal host
+CSRF_TRUSTED_ORIGINS = [f'https://{host}' for host in ALLOWED_HOSTS]
 
 # Security settings for production
 SECURE_BROWSER_XSS_FILTER = True
