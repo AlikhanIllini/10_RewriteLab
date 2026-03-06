@@ -1549,3 +1549,62 @@ def session_delete(request, pk):
         'title': 'Delete Session',
     })
 
+
+# =============================================================================
+# CUSTOM CONTEXT AND TONE CREATION
+# =============================================================================
+
+@login_required(login_url='rewrites:login')
+def context_create(request):
+    """
+    Create a new custom RewriteContext.
+
+    POST: validate form, save, redirect back to session create.
+    GET: show form.
+    """
+    from .forms import ContextCreateForm
+
+    if request.method == 'POST':
+        form = ContextCreateForm(request.POST)
+        if form.is_valid():
+            context = form.save(commit=False)
+            context.is_active = True
+            context.save()
+            django_messages.success(request, f'Context "{context.name}" created successfully!')
+            return redirect('rewrites:session_create')
+    else:
+        form = ContextCreateForm()
+
+    return render(request, 'rewrites/context_create.html', {
+        'form': form,
+        'title': 'Add Writing Context',
+    })
+
+
+@login_required(login_url='rewrites:login')
+def tone_create(request):
+    """
+    Create a new custom ToneOption.
+
+    POST: validate form, save, redirect back to session create.
+    GET: show form.
+    """
+    from .forms import ToneCreateForm
+
+    if request.method == 'POST':
+        form = ToneCreateForm(request.POST)
+        if form.is_valid():
+            tone = form.save(commit=False)
+            tone.is_active = True
+            tone.intensity_level = 5  # Default intensity
+            tone.save()
+            django_messages.success(request, f'Tone "{tone.name}" created successfully!')
+            return redirect('rewrites:session_create')
+    else:
+        form = ToneCreateForm()
+
+    return render(request, 'rewrites/tone_create.html', {
+        'form': form,
+        'title': 'Add Tone Option',
+    })
+

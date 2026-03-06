@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Tone Option | RewriteLab{% endblock %}
+
+{% block content %}
+<h2>🎨 Add Tone Option</h2>
+
+<p style="color: #718096; margin-bottom: 1.5rem;">
+    Create a custom tone for your rewrite sessions.
+</p>
+
+{% if messages %}
+<div style="margin-bottom: 1rem;">
+    {% for message in messages %}
+    <div style="padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 0.5rem;
+        {% if message.tags == 'error' %}background:#fff5f5;border:1px solid #fed7d7;color:#9b2c2c;
+        {% else %}background:#f0fff4;border:1px solid #c6f6d5;color:#276749;{% endif %}">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="card">
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="{{ form.name.id_for_label }}">{{ form.name.label }} *</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+            <div style="color: #e53e3e; font-size: 0.85rem; margin-top: 0.25rem;">
+                {% for error in form.name.errors %}{{ error }}<br>{% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.description.id_for_label }}">{{ form.description.label }} *</label>
+            {{ form.description }}
+            <div class="form-help">Describe what this tone conveys.</div>
+            {% if form.description.errors %}
+            <div style="color: #e53e3e; font-size: 0.85rem; margin-top: 0.25rem;">
+                {% for error in form.description.errors %}{{ error }}<br>{% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.prompt_modifier.id_for_label }}">{{ form.prompt_modifier.label }} *</label>
+            {{ form.prompt_modifier }}
+            <div class="form-help">Instructions for the AI on how to achieve this tone.</div>
+            {% if form.prompt_modifier.errors %}
+            <div style="color: #e53e3e; font-size: 0.85rem; margin-top: 0.25rem;">
+                {% for error in form.prompt_modifier.errors %}{{ error }}<br>{% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary">Create Tone</button>
+            <a href="{% url 'rewrites:session_create' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

@@ -53,6 +53,12 @@ urlpatterns = [
     path('sessions/<int:pk>/delete/', views.session_delete, name='session_delete'),
 
     # ==========================================================================
+    # CUSTOM CONTEXT AND TONE
+    # ==========================================================================
+    path('context/new/', views.context_create, name='context_create'),
+    path('tone/new/', views.tone_create, name='tone_create'),
+
+    # ==========================================================================
     # SEARCH & FILTERING (Section 2 + Section 5)
     # ==========================================================================
     path('search/', views.search, name='search'),  # GET & POST search

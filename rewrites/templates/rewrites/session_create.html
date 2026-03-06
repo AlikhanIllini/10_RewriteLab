@@ -14,7 +14,8 @@
 <div style="margin-bottom: 1rem;">
     {% for message in messages %}
     <div style="padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 0.5rem;
-        {% if message.tags == 'error' %}background:#fff5f5;border:1px solid #fed7d7;color:#9b2c2c;
+        {% if message.tags == 'success' %}background:#f0fff4;border:1px solid #c6f6d5;color:#276749;
+        {% elif message.tags == 'error' %}background:#fff5f5;border:1px solid #fed7d7;color:#9b2c2c;
         {% else %}background:#ebf8ff;border:1px solid #bee3f8;color:#2b6cb0;{% endif %}">
         {{ message }}
     </div>
@@ -41,7 +42,10 @@
 
         <div class="grid-2">
             <div class="form-group">
-                <label for="{{ form.context.id_for_label }}">{{ form.context.label }}</label>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label for="{{ form.context.id_for_label }}">{{ form.context.label }}</label>
+                    <a href="{% url 'rewrites:context_create' %}" style="font-size: 0.85rem; color: #667eea;">+ Add New</a>
+                </div>
                 {{ form.context }}
                 {% if form.context.help_text %}
                 <div class="form-help">{{ form.context.help_text }}</div>
@@ -54,7 +58,10 @@
             </div>
 
             <div class="form-group">
-                <label for="{{ form.tone.id_for_label }}">{{ form.tone.label }}</label>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label for="{{ form.tone.id_for_label }}">{{ form.tone.label }}</label>
+                    <a href="{% url 'rewrites:tone_create' %}" style="font-size: 0.85rem; color: #667eea;">+ Add New</a>
+                </div>
                 {{ form.tone }}
                 {% if form.tone.help_text %}
                 <div class="form-help">{{ form.tone.help_text }}</div>
@@ -94,4 +101,3 @@
     </form>
 </div>
 {% endblock %}
-
