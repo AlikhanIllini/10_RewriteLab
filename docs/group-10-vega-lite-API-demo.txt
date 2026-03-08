@@ -3,7 +3,7 @@
   "title": "RewriteLab: Sessions by Writing Context",
   "description": "Bar chart showing the number of rewrite sessions per writing context, pulled from the public API.",
   "data": {
-    "url": "YOUR_PRODUCTION_URL/api/public/context-stats/"
+    "url": "https://rewritelab.up.railway.app/api/public/context-stats/"
   },
   "mark": {
     "type": "bar",
