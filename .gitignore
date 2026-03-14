@@ -69,6 +69,7 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+.ipynb_checkpoints/
 
 # IPython
 profile_default/
@@ -149,3 +150,9 @@ seed_data.py
 
 # Keep db.sqlite3 for grading (contains test data)
 # db.sqlite3
+
+# Local model artifacts
+*.bin
+*.safetensors
+*.pt
+*.pth

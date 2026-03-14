@@ -32,14 +32,14 @@ class _SessionMixin:
 
     def _create_session(self, **overrides):
         ctx, _ = RewriteContext.objects.get_or_create(
-            name="Professional Email",
+            name="Professional Email Test",
             defaults={
                 "description": "Emails in a workplace setting",
                 "guidelines": "Be concise and respectful.",
             },
         )
         tone, _ = ToneOption.objects.get_or_create(
-            name="Clear",
+            name="Clear Test Tone",
             defaults={
                 "description": "Direct and unambiguous",
                 "prompt_modifier": "Write clearly and directly.",
@@ -459,3 +459,71 @@ class DashboardTest(_SessionMixin, TestCase):
         self.assertNotContains(resp, "completely different text")
 
 
+# ── Local Hugging Face path tests ───────────────────────────────────────────
+
+class LocalRewriteServiceTest(_SessionMixin, TestCase):
+    @patch("rewrites.services.local_rewrite._get_pipeline")
+    def test_generate_local_rewrite_persists_version_l(self, mock_get_pipeline):
+        def _fake_pipe(*args, **kwargs):
+            return [{"generated_text": "Please send me the updated file when you can."}]
+
+        mock_get_pipeline.return_value = _fake_pipe
+
+        session = self._create_session(session_token="local-1111")
+
+        from rewrites.services.local_rewrite import generate_local_rewrite_for_session
+        result = generate_local_rewrite_for_session(session)
+
+        self.assertEqual(result.version_label, "L")
+        self.assertTrue(session.results.filter(version_label="L").exists())
+        session.refresh_from_db()
+        self.assertTrue(session.is_completed)
+
+    def test_generate_local_rewrite_rejects_empty_input(self):
+        session = self._create_session(
+            session_token="local-2222",
+            original_text="          "
+        )
+
+        from rewrites.services.local_rewrite import generate_local_rewrite_for_session
+        with self.assertRaises(ValueError):
+            generate_local_rewrite_for_session(session)
+
+
+class LocalRewriteViewTest(_SessionMixin, TestCase):
+    def setUp(self):
+        self.client = Client()
+        from django.contrib.auth.models import User
+        self.user = User.objects.create_user("localuser", "local@x.com", "pass1234")
+        self.client.login(username="localuser", password="pass1234")
+
+    def test_get_not_allowed(self):
+        session = self._create_session(session_token="local-view-1")
+        session.user = self.user
+        session.save()
+
+        url = reverse("rewrites:generate_local_rewrite", kwargs={"pk": session.pk})
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 405)
+
+    @patch("rewrites.services.local_rewrite.generate_local_rewrite_for_session")
+    def test_post_generates_local_result(self, mock_generate):
+        session = self._create_session(session_token="local-view-2")
+        session.user = self.user
+        session.save()
+
+        mock_generate.return_value = RewriteResult.objects.create(
+            session=session,
+            version_label="L",
+            rewritten_text="Cleaned local output.",
+            change_summary="Single local Hugging Face rewrite.",
+            quality_score="high",
+            word_count_original=10,
+            word_count_rewritten=4,
+        )
+
+        url = reverse("rewrites:generate_local_rewrite", kwargs={"pk": session.pk})
+        resp = self.client.post(url)
+
+        self.assertEqual(resp.status_code, 302)
+        self.assertTrue(session.results.filter(version_label="L").exists())

@@ -1348,6 +1348,36 @@ def generate_rewrites(request, pk):
     return redirect('rewrites:session_detail', pk=session.pk)
 
 
+@login_required(login_url='rewrites:login')
+@require_POST
+def generate_local_rewrite(request, pk):
+    """
+    Trigger local Hugging Face rewrite generation for a session.
+
+    POST /sessions/<pk>/generate-local/
+    Stores one local rewrite using existing RewriteResult storage.
+    """
+    session = get_object_or_404(RewriteSession, pk=pk)
+
+    if session.user and session.user != request.user:
+        django_messages.error(request, 'You do not have permission to modify this session.')
+        return redirect('rewrites:session_detail', pk=session.pk)
+
+    try:
+        from .services.local_rewrite import generate_local_rewrite_for_session
+        result = generate_local_rewrite_for_session(session)
+        django_messages.success(
+            request,
+            f"Generated local rewrite successfully (Version {result.version_label}).",
+        )
+    except ValueError as exc:
+        django_messages.error(request, str(exc))
+    except Exception as exc:
+        django_messages.error(request, f"Unexpected local rewrite error: {exc}")
+
+    return redirect('rewrites:session_detail', pk=session.pk)
+
+
 # =============================================================================
 # AUTHENTICATION VIEWS
 # =============================================================================
@@ -1607,4 +1637,6 @@ def tone_create(request):
         'form': form,
         'title': 'Add Tone Option',
     })
+
+
 

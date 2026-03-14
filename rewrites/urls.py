@@ -32,6 +32,7 @@ urlpatterns = [
     # GENERATE REWRITES (LLM)
     # ==========================================================================
     path('sessions/<int:pk>/generate/', views.generate_rewrites, name='generate_rewrites'),
+    path('sessions/<int:pk>/generate-local/', views.generate_local_rewrite, name='generate_local_rewrite'),
 
     # ==========================================================================
     # AUTHENTICATION

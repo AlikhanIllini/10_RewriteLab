@@ -58,13 +58,19 @@
             {% csrf_token %}
             {% if results %}
             <button type="submit" class="btn btn-secondary" style="background:#ed8936;border-color:#ed8936;color:#fff;">
-                🔄 Regenerate Rewrites
+                🔄 Regenerate Rewrites (OpenAI)
             </button>
             {% else %}
             <button type="submit" class="btn btn-primary" style="background:#48bb78;border-color:#48bb78;color:#fff;">
-                ✨ Generate Rewrites
+                ✨ Generate Rewrites (OpenAI)
             </button>
             {% endif %}
+        </form>
+        <form method="post" action="{% url 'rewrites:generate_local_rewrite' session.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-secondary" style="background:#4a5568;border-color:#4a5568;color:#fff;">
+                🤗 Generate Local Rewrite
+            </button>
         </form>
         {% if user.is_authenticated and session.user == user or session.user is None and user.is_authenticated %}
         <a href="{% url 'rewrites:session_edit' session.pk %}" class="btn btn-secondary">✏️ Edit</a>
@@ -147,4 +153,3 @@ function copyRewrite(label, btn) {
 }
 </script>
 {% endblock %}
-

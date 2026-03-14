@@ -256,3 +256,45 @@ The `get_absolute_url()` method provides a canonical way to get the URL for a mo
 7. Set ALLOWED_HOSTS in production.py
 8. Test all endpoints
 
+---
+
+## Assignment 6 AI Notes
+
+This section answers the A6 production-reflection prompts using clear narrative points (no tables).
+
+### Assumptions Used for Cost Estimates
+- Workload baseline: 10,000 daily users.
+- Average output length: about 220 tokens per request.
+- Average input/prompt length: about 280 tokens per request.
+- Estimated total per request for API pricing comparisons: about 500 tokens.
+- Local comparison baseline: 16 vCPU, 64 GB RAM, and optional 16 GB GPU.
+- Cost values here are planning estimates and should be recalculated with the final cloud provider and region.
+
+### 1) Size vs. Quality Trade-off (Sweet Spot)
+Based on our leaderboard experiments and local integration behavior, very small models (under 1B) were very fast but less consistent for tone and structure. Small models in the 1B to 3B range gave the best practical balance for RewriteLab: they were still fast enough for local testing while producing noticeably better rewrite quality than ultra-light models. Medium and larger models improved consistency further, but the gain was not large enough for this project to justify much heavier local compute requirements.
+
+So for this app, the best category is the small range (1B to 3B). It provides good rewrite quality, manageable local latency, and lower infrastructure pressure than larger classes.
+
+### 2) Cost and Scaling (10,000 Daily Users)
+At 10,000 requests per day, monthly traffic is roughly 300,000 requests. Using the 500-token estimate per request, monthly token volume for API cost planning is about 150 million tokens.
+
+If we run local-only, costs are mostly fixed infrastructure costs (server/GPU uptime), but operational burden increases because we must handle scaling, queue spikes, monitoring, and model serving reliability ourselves. If we run API-only, operations are simpler and output quality is usually more stable, but spending scales directly with usage and can become expensive at high volume.
+
+At this traffic level, a hybrid strategy is usually the most balanced choice: local-first for low-risk requests, API escalation for high-stakes or quality-sensitive requests.
+
+### 3) Hybrid Potential (Cost Minimization + Quality)
+A practical hybrid path for RewriteLab is:
+1. Use the local model as the default first pass.
+2. Check output quality with lightweight rules (filler phrase checks, structure checks, length sanity, and basic instruction adherence).
+3. If output fails thresholds, escalate that request to the external API.
+4. Save both local and API outcomes in the same session when needed so users can compare and choose.
+
+This approach reduces total token spend while still preserving high quality where it matters most.
+
+### 4) Conditions for Pre-trained Local vs Paid API (16 CPU / 16 GPU / 64 GB RAM / 1 TB)
+With the provided server profile, local pre-trained models are acceptable when request volume is predictable, moderate latency is acceptable, and the team can manage model-serving infrastructure. Local is also attractive when data-control concerns favor keeping inference in our own environment.
+
+A paid API is the better choice when traffic spikes are frequent, consistent top-tier writing quality is required, or the team wants to minimize MLOps overhead and focus on product features. API usage is also preferable when internal infrastructure and engineering time would cost more than external inference billing.
+
+### Final Reflection
+For RewriteLab, the strongest deployment strategy is hybrid by default: local generation for cost-efficient draft rewrites and API escalation for quality-critical cases. This keeps operational risk manageable while maintaining a high-quality user experience.
