@@ -46,7 +46,7 @@ Both features run entirely on public/open models with no paid API dependency.
 
 **How the response returns to the user:**
 - The rewrite is stored as a `RewriteResult` row with version label `L` (for Local)
-- The user is redirected to the session detail page where the rewrite appears alongside any OpenAI rewrites
+- The user is redirected to the session detail page where the rewrite appears alongside any API rewrites
 - Success/error messages are displayed via Django's messages framework
 
 ### Feature 2: Semantic Search
@@ -170,7 +170,7 @@ Render Results Page
                     /              \
                    /                \
       Local Rewrite                 API Rewrite
-     (Qwen 0.5B)                (OpenAI gpt-4.1-mini)
+     (Qwen 0.5B)                (gpt-4.1-mini API)
           |                              |
      Version "L"                  Versions A, B, C
           |                              |
@@ -210,14 +210,14 @@ In Assignment 7, we benchmarked these models on speed, quality, and cost:
 3. It downloads automatically from Hugging Face (no manual setup)
 4. It loads in seconds and generates rewrites quickly
 5. For a classroom demo and local development, speed and zero-cost operation matter more than peak quality
-6. The OpenAI fallback (gpt-4.1-mini) is available for users who need higher quality
+6. The API fallback (gpt-4.1-mini) is available for users who need higher quality
 
 **Alternatives considered:**
 - `meta-llama/Llama-3.2-3B-Instruct` (medium, quality ~7.0) -- better output but too slow on CPU and requires more RAM
 - `microsoft/Phi-3.5-mini-instruct` (medium, quality ~7.2) -- strongest medium option but same hardware constraints
 - `mistralai/Mistral-7B-Instruct-v0.3` (large, quality ~7.6) -- best practical balance per A7, but requires GPU
 
-The routing strategy from A7 Part 3 informs the hybrid design: use the cheap local model for quick drafts, escalate to OpenAI for higher-stakes writing.
+The routing strategy from A7 Part 3 informs the hybrid design: use the cheap local model for quick drafts, escalate to the API for higher-stakes writing.
 
 ### Embedding Model: all-MiniLM-L6-v2
 
@@ -368,8 +368,8 @@ Return only one rewritten version, no bullets and no explanation.
 | Prompt echo detection | `local_rewrite.py` | Catches when model repeats instructions |
 | Search query validation | `semantic_search.py` | Min 3 chars, max 2000 chars, non-empty |
 | Session cap for search | `semantic_search.py` | Limits to 200 sessions to prevent memory issues |
-| API key validation | `llm_rewrite.py` | Clear error if OPENAI_API_KEY missing |
-| Rate limit handling | `llm_rewrite.py` | Catches OpenAI rate limit errors |
+| API key validation | `llm_rewrite.py` | Clear error if API key missing |
+| Rate limit handling | `llm_rewrite.py` | Catches API rate limit errors |
 | JSON parse error handling | `llm_rewrite.py` | Catches malformed LLM responses |
 | Ownership checks | `views.py` | Users can only edit/generate for their own sessions |
 | Model loading errors | `local_rewrite.py`, `semantic_search.py` | Clear errors if dependencies not installed |

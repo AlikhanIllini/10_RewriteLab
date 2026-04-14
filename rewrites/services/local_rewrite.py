@@ -60,7 +60,7 @@ def generate_local_rewrite_for_session(session: RewriteSession) -> RewriteResult
     """
     Generate a single local rewrite and store it as version label 'L'.
 
-    Keeps existing OpenAI versions (A/B/C) intact so both paths coexist.
+    Keeps existing API versions (A/B/C) intact so both paths coexist.
     """
     original_text = (session.original_text or "").strip()
     if not original_text:
@@ -71,7 +71,7 @@ def generate_local_rewrite_for_session(session: RewriteSession) -> RewriteResult
         raise ValueError(
             f"Input text is too long ({word_count} words). "
             "The local model handles up to 500 words. "
-            "Please shorten your text or use the OpenAI option."
+            "Please shorten your text or use the API option."
         )
 
     prompt = _build_prompt(session)

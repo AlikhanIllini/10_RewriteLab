@@ -2,7 +2,7 @@
 
 RewriteLab is a web app that helps users improve professional and academic writing by generating high-quality rewrite examples of user-provided text. The core idea is "example-based rewriting": instead of grammar-only fixes or vague advice, the app produces complete alternative drafts that preserve the original meaning while improving clarity, structure, and natural tone.
 
-The app now features a fully working **AI-powered rewrite engine** using both a local Hugging Face model and the OpenAI API. Users can create accounts, submit their text, and receive rewrite versions scored for quality. The app also includes **AI-powered semantic search** over past sessions using sentence-transformer embeddings. Sessions are owned by users, with full create/edit/delete capabilities and a personal dashboard.
+The app now features a fully working **AI-powered rewrite engine** using both a local Hugging Face model and an LLM API. Users can create accounts, submit their text, and receive rewrite versions scored for quality. The app also includes **AI-powered semantic search** over past sessions using sentence-transformer embeddings. Sessions are owned by users, with full create/edit/delete capabilities and a personal dashboard.
 
 ## Current Status
 
@@ -19,7 +19,7 @@ The app now features a fully working **AI-powered rewrite engine** using both a 
 ### AI Feature 1: Local Text Rewriting (Hugging Face)
 - Uses `Qwen/Qwen2.5-0.5B-Instruct` for local text rewriting (no paid API required)
 - Model loads lazily and caches in-process; weights download automatically on first run
-- Generates a single rewrite (Version L) stored alongside OpenAI rewrites
+- Generates a single rewrite (Version L) stored alongside API rewrites
 - Input guardrails: empty text rejection, 500-word limit, 5000-char limit, prompt echo detection
 - Quality scoring via word count ratio + AI filler phrase detection
 
@@ -33,7 +33,7 @@ The app now features a fully working **AI-powered rewrite engine** using both a 
 ### How to Access AI Features
 1. **Local Rewrite**: Create a session, then click "Generate Local Rewrite" on the session detail page
 2. **Semantic Search**: Click "AI Search" in the navigation bar
-3. **OpenAI Rewrite** (optional, requires API key): Click "Generate Rewrites (OpenAI)" on the session detail page
+3. **API Rewrite** (optional, requires API key): Click "Generate Rewrites" on the session detail page
 
 ### Model Download Notes
 - **Qwen/Qwen2.5-0.5B-Instruct**: Downloads automatically from Hugging Face on first local rewrite (~1GB)
@@ -95,7 +95,7 @@ See [README_AI.md](README_AI.md) for:
 ## Assignment 5 Features (NEW)
 
 ### LLM-Powered Rewrite Generation
-- Calls the **OpenAI Chat Completions API** to generate rewrites
+- Calls the **LLM Chat Completions API** to generate rewrites
 - Generates **3 distinct rewrites** per session:
   - **Version A**: Most concise and direct
   - **Version B**: Balanced professional (clear + polite)
@@ -131,10 +131,10 @@ See [README_AI.md](README_AI.md) for:
 ### Service Layer
 - `rewrites/services/llm_rewrite.py` — Encapsulated LLM logic:
   - `build_prompt(session)` — Assembles system/developer/user messages
-  - `call_llm(messages)` — Calls OpenAI with JSON response format
+  - `call_llm(messages)` — Calls LLM API with JSON response format
   - `compute_quality_score()` — Rule-based quality heuristic
   - `generate_rewrites_for_session()` — Full orchestration with DB persistence
-- Handles OpenAI errors gracefully (auth, rate limit, API errors)
+- Handles API errors gracefully (auth, rate limit, API errors)
 
 ### Tests (32 passing)
 - Prompt builder tests (7)
@@ -222,7 +222,7 @@ See [README_AI.md](README_AI.md) for:
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/sessions/<pk>/generate/` | POST | Generate AI rewrites (OpenAI) |
+| `/sessions/<pk>/generate/` | POST | Generate AI rewrites (LLM API) |
 | `/sessions/<pk>/generate-local/` | POST | Generate local rewrite (Qwen 0.5B) |
 | `/semantic-search/` | GET | AI semantic search over sessions |
 | `/sessions/new/` | GET/POST | Create a new rewrite session |
@@ -274,7 +274,7 @@ See [README_AI.md](README_AI.md) for:
 ├── rewrites/                          # Main Django app
 │   ├── migrations/
 │   ├── services/                      # Service layer
-│   │   ├── llm_rewrite.py            # OpenAI LLM integration
+│   │   ├── llm_rewrite.py            # LLM API integration
 │   │   ├── local_rewrite.py          # Local HF model (Qwen 0.5B)
 │   │   └── semantic_search.py        # Semantic search (sentence-transformers)
 │   ├── templates/rewrites/            # App templates
@@ -396,7 +396,7 @@ The project demonstrates four Django view patterns:
 | Variable | Description |
 |----------|-------------|
 | `SECRET_KEY` | Django secret key |
-| `OPENAI_API_KEY` | OpenAI API key (required for rewrite generation) |
+| `OPENAI_API_KEY` | API key for LLM rewrite generation |
 | `GOOGLE_CLIENT_ID` | Google OAuth client ID |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
 | `ALLOWED_HOSTS` | Comma-separated list of allowed hosts |

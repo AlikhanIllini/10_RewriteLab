@@ -1,7 +1,7 @@
 """
 LLM-powered rewrite generation service for RewriteLab.
 
-This module encapsulates all OpenAI interaction logic:
+This module encapsulates all LLM API interaction logic:
 - build_prompt(session) — assembles the chat messages
 - call_llm(messages) — sends the request and parses JSON
 - compute_quality_score(original, rewritten) — simple heuristic
@@ -107,7 +107,7 @@ def build_prompt(session: RewriteSession) -> list[dict]:
 # ---------------------------------------------------------------------------
 
 def _get_client() -> OpenAI:
-    """Return an OpenAI client. Raises ValueError if key is missing."""
+    """Return an LLM API client. Raises ValueError if key is missing."""
     api_key = os.getenv("OPENAI_API_KEY", "")
     if not api_key:
         raise ValueError(
@@ -119,7 +119,7 @@ def _get_client() -> OpenAI:
 
 def call_llm(messages: list[dict], model: str = "gpt-4.1-mini") -> list[dict]:
     """
-    Send messages to the OpenAI chat-completions API and return parsed
+    Send messages to the LLM chat-completions API and return parsed
     rewrite dicts.
 
     Returns a list of dicts, each with keys:
@@ -137,19 +137,18 @@ def call_llm(messages: list[dict], model: str = "gpt-4.1-mini") -> list[dict]:
         )
     except AuthenticationError:
         raise ValueError(
-            "Invalid OpenAI API key. Please check your OPENAI_API_KEY "
-            "in the .env file and make sure it is a valid key from "
-            "https://platform.openai.com/account/api-keys"
+            "Invalid API key. Please check your OPENAI_API_KEY "
+            "in the .env file and make sure it is a valid key."
         )
     except RateLimitError:
         raise ValueError(
-            "OpenAI rate limit exceeded or quota reached. "
+            "API rate limit exceeded or quota reached. "
             "Please wait a moment and try again, or check your plan's usage limits."
         )
     except APIError as exc:
-        logger.error("OpenAI API error: %s", exc)
+        logger.error("LLM API error: %s", exc)
         raise ValueError(
-            f"OpenAI API error (status {exc.status_code}): "
+            f"API error (status {exc.status_code}): "
             "The request could not be completed. Please try again later."
         )
 
