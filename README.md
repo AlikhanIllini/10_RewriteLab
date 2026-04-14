@@ -2,7 +2,7 @@
 
 RewriteLab is a web app that helps users improve professional and academic writing by generating high-quality rewrite examples of user-provided text. The core idea is "example-based rewriting": instead of grammar-only fixes or vague advice, the app produces complete alternative drafts that preserve the original meaning while improving clarity, structure, and natural tone.
 
-The app now features a fully working **AI-powered rewrite engine** using the OpenAI API. Users can create accounts, submit their text, and instantly receive 3 distinct rewrite versions (concise, balanced, warm) — each scored for quality. Sessions are owned by users, with full create/edit/delete capabilities and a personal dashboard.
+The app now features a fully working **AI-powered rewrite engine** using both a local Hugging Face model and the OpenAI API. Users can create accounts, submit their text, and receive rewrite versions scored for quality. The app also includes **AI-powered semantic search** over past sessions using sentence-transformer embeddings. Sessions are owned by users, with full create/edit/delete capabilities and a personal dashboard.
 
 ## Current Status
 
@@ -11,9 +11,46 @@ The app now features a fully working **AI-powered rewrite engine** using the Ope
 ✅ **Part 3: User Input, Analysis, & APIs** - Complete  
 ✅ **Part 4: APIs, Vega-Lite Charts, Exports, Deployment** - Complete  
 ✅ **Part 5: LLM Integration, Auth, Session CRUD** - Complete  
-✅ **Part 5.1: Django Auth + Google OAuth + Public API** - Complete
+✅ **Part 5.1: Django Auth + Google OAuth + Public API** - Complete  
+✅ **A9: Integrated AI Application** - Complete
 
-## Assignment 5.1 Features (NEW)
+## A9: Integrated AI Application (NEW)
+
+### AI Feature 1: Local Text Rewriting (Hugging Face)
+- Uses `Qwen/Qwen2.5-0.5B-Instruct` for local text rewriting (no paid API required)
+- Model loads lazily and caches in-process; weights download automatically on first run
+- Generates a single rewrite (Version L) stored alongside OpenAI rewrites
+- Input guardrails: empty text rejection, 500-word limit, 5000-char limit, prompt echo detection
+- Quality scoring via word count ratio + AI filler phrase detection
+
+### AI Feature 2: Semantic Search (sentence-transformers)
+- Uses `all-MiniLM-L6-v2` (384-dim embeddings) for meaning-based search over past sessions
+- Embeds query and all session texts, ranks by cosine similarity
+- Deduplicates results by session, returns top 5 with similarity scores
+- Input validation: min 3 chars, max 2000 chars
+- Accessible via the "AI Search" nav link at `/semantic-search/`
+
+### How to Access AI Features
+1. **Local Rewrite**: Create a session, then click "Generate Local Rewrite" on the session detail page
+2. **Semantic Search**: Click "AI Search" in the navigation bar
+3. **OpenAI Rewrite** (optional, requires API key): Click "Generate Rewrites (OpenAI)" on the session detail page
+
+### Model Download Notes
+- **Qwen/Qwen2.5-0.5B-Instruct**: Downloads automatically from Hugging Face on first local rewrite (~1GB)
+- **all-MiniLM-L6-v2**: Downloads automatically on first semantic search (~90MB)
+- Model weights are cached in `~/.cache/huggingface/` (not committed to git)
+- No manual download steps required
+
+### AI Documentation
+See [README_AI.md](README_AI.md) for:
+- AI workflow explanation and architecture diagrams
+- Model selection rationale (connected to A6, A7, A8)
+- Evaluation with 5 test cases
+- Failure analysis (3 cases)
+- Improvement made (before/after)
+- Full guardrails summary
+
+## Assignment 5.1 Features
 
 ### Part 1: Internal Django Authentication
 - Custom login (`/login/`) and signup (`/register/`) pages
@@ -185,7 +222,9 @@ The app now features a fully working **AI-powered rewrite engine** using the Ope
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/sessions/<pk>/generate/` | POST | Generate AI rewrites for a session |
+| `/sessions/<pk>/generate/` | POST | Generate AI rewrites (OpenAI) |
+| `/sessions/<pk>/generate-local/` | POST | Generate local rewrite (Qwen 0.5B) |
+| `/semantic-search/` | GET | AI semantic search over sessions |
 | `/sessions/new/` | GET/POST | Create a new rewrite session |
 | `/sessions/<pk>/edit/` | GET/POST | Edit an existing session |
 | `/sessions/<pk>/delete/` | GET/POST | Delete a session |
@@ -235,7 +274,9 @@ The app now features a fully working **AI-powered rewrite engine** using the Ope
 ├── rewrites/                          # Main Django app
 │   ├── migrations/
 │   ├── services/                      # Service layer
-│   │   └── llm_rewrite.py            # OpenAI LLM integration
+│   │   ├── llm_rewrite.py            # OpenAI LLM integration
+│   │   ├── local_rewrite.py          # Local HF model (Qwen 0.5B)
+│   │   └── semantic_search.py        # Semantic search (sentence-transformers)
 │   ├── templates/rewrites/            # App templates
 │   │   ├── home.html
 │   │   ├── session_list.html

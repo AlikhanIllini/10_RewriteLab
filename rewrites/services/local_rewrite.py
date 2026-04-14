@@ -66,6 +66,14 @@ def generate_local_rewrite_for_session(session: RewriteSession) -> RewriteResult
     if not original_text:
         raise ValueError("Cannot generate rewrite: original text is empty.")
 
+    word_count = len(original_text.split())
+    if word_count > 500:
+        raise ValueError(
+            f"Input text is too long ({word_count} words). "
+            "The local model handles up to 500 words. "
+            "Please shorten your text or use the OpenAI option."
+        )
+
     prompt = _build_prompt(session)
     pipe = _get_pipeline()
 
@@ -84,6 +92,13 @@ def generate_local_rewrite_for_session(session: RewriteSession) -> RewriteResult
     rewritten_text = _extract_generated_text(output)
     if not rewritten_text:
         raise ValueError("Local model returned empty output. Try again.")
+
+    # Guardrail: if the model echoed back the prompt or produced gibberish
+    if rewritten_text.startswith("You are a professional editor"):
+        raise ValueError(
+            "Local model echoed the prompt instead of generating a rewrite. "
+            "This can happen with very short inputs. Try adding more detail."
+        )
 
     original_wc = len(original_text.split())
     rewritten_wc = len(rewritten_text.split())

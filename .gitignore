@@ -156,3 +156,7 @@ seed_data.py
 *.safetensors
 *.pt
 *.pth
+*.onnx
+*.gguf
+model_cache/
+sentence_transformers_cache/

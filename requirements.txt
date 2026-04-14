@@ -48,3 +48,4 @@ transformers
 torch
 accelerate
 sentencepiece
+sentence-transformers

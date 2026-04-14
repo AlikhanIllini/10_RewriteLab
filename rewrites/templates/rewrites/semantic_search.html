@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Semantic Search | RewriteLab{% endblock %}
+
+{% block content %}
+<h2>AI Semantic Search</h2>
+
+<div class="view-type">
+    <strong>Powered by:</strong> sentence-transformers/all-MiniLM-L6-v2 (384-dim embeddings from A8)
+</div>
+
+{% if messages %}
+<div style="margin-bottom: 1rem;">
+    {% for message in messages %}
+    <div style="padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 0.5rem;
+        {% if message.tags == 'success' %}background:#f0fff4;border:1px solid #c6f6d5;color:#276749;
+        {% elif message.tags == 'error' %}background:#fff5f5;border:1px solid #fed7d7;color:#9b2c2c;
+        {% else %}background:#ebf8ff;border:1px solid #bee3f8;color:#2b6cb0;{% endif %}">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="card">
+    <h3>Search by Meaning</h3>
+    <p style="color: #718096; margin-bottom: 1rem;">
+        Unlike keyword search, semantic search finds sessions with similar <em>meaning</em>,
+        even if the exact words don't match. For example, searching "apology to manager"
+        will find sessions about saying sorry to a boss.
+    </p>
+
+    <form method="GET" action="{% url 'rewrites:semantic_search' %}">
+        <div class="form-group">
+            <label for="q">Semantic Query</label>
+            <input type="text" id="q" name="q" value="{{ query }}"
+                   class="form-control"
+                   placeholder="Describe what you're looking for (e.g., 'professional apology email')">
+        </div>
+        <div style="display: flex; gap: 0.75rem; align-items: center; margin-top: 0.75rem;">
+            <button type="submit" class="btn btn-primary">Search</button>
+            {% if query %}
+            <a href="{% url 'rewrites:semantic_search' %}" class="btn btn-secondary">Clear</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+{% if query %}
+<div class="card">
+    <h3>Results for: "{{ query }}"</h3>
+    {% if latency %}
+    <p style="font-size: 0.8rem; color: #a0aec0;">Search completed in {{ latency }}s</p>
+    {% endif %}
+
+    {% for item in results %}
+    <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <a href="{{ item.session.get_absolute_url }}" style="font-weight: 600; color: #2d3748;">
+                {{ item.session.original_text|truncatewords:25 }}
+            </a>
+            <span style="background: {% if item.score >= 0.6 %}#c6f6d5{% elif item.score >= 0.4 %}#fefcbf{% else %}#fed7d7{% endif %};
+                         padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.8rem; font-weight: 600;">
+                {{ item.score }} similarity
+            </span>
+        </div>
+        <p style="background: #f7fafc; padding: 0.75rem; border-radius: 6px; margin: 0.5rem 0; font-size: 0.9rem; border: 1px solid #e2e8f0;">
+            {{ item.matched_text }}
+        </p>
+        <div class="session-meta">
+            <span class="badge badge-context">{{ item.session.context.name }}</span>
+            <span class="badge badge-tone">{{ item.session.tone.name }}</span>
+            {% if item.source == "original" %}
+            <span style="font-size: 0.75rem; color: #a0aec0;">Matched on: original text</span>
+            {% else %}
+            <span style="font-size: 0.75rem; color: #a0aec0;">Matched on: {{ item.source }}</span>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <h3>No Similar Sessions Found</h3>
+        <p>No sessions match your query semantically. Try a different description or create a new session.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="card" style="background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);">
+    <h3>How It Works</h3>
+    <p style="color: #4a5568; line-height: 1.6;">
+        <strong>1.</strong> Your query is converted into a 384-dimensional vector using the
+        <code>all-MiniLM-L6-v2</code> embedding model.<br>
+        <strong>2.</strong> All session texts (originals + rewrites) are also embedded.<br>
+        <strong>3.</strong> Cosine similarity is computed between your query and each text.<br>
+        <strong>4.</strong> The top matches are returned, deduplicated by session.
+    </p>
+    <p style="color: #718096; font-size: 0.85rem; margin-top: 0.5rem;">
+        This approach was evaluated in Assignment 8 across three embedding models and three chunking strategies.
+        <code>all-MiniLM-L6-v2</code> was selected for its strong balance of speed and retrieval quality.
+    </p>
+</div>
+
+<p style="margin-top: 1rem;">
+    <a href="{% url 'rewrites:search' %}" class="btn btn-secondary">Keyword Search</a>
+    <a href="{% url 'rewrites:dashboard' %}" class="btn btn-secondary">Dashboard</a>
+</p>
+{% endblock %}

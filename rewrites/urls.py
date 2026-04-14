@@ -64,6 +64,7 @@ urlpatterns = [
     # ==========================================================================
     path('search/', views.search, name='search'),  # GET & POST search
     path('sessions/search/', views.SessionSearchView.as_view(), name='session_search'),  # CBV with GET/POST
+    path('semantic-search/', views.semantic_search, name='semantic_search'),  # AI semantic search (A8)
 
     # ==========================================================================
     # ANALYTICS & CHARTS (Section 4 - Matplotlib)

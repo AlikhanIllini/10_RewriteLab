@@ -1315,6 +1315,44 @@ def reports(request):
 
 
 # =============================================================================
+# SEMANTIC SEARCH (A8 Integration)
+# =============================================================================
+
+@login_required(login_url='rewrites:login')
+def semantic_search(request):
+    """
+    Semantic search over past rewrite sessions using sentence-transformers.
+
+    Uses all-MiniLM-L6-v2 embeddings (from A8) to find sessions by meaning
+    rather than exact keyword match.
+
+    GET /semantic-search/?q=...
+    """
+    import time
+
+    query = request.GET.get('q', '').strip()
+    results = []
+    latency = None
+
+    if query:
+        try:
+            from .services.semantic_search import semantic_search_sessions
+            start = time.time()
+            results = semantic_search_sessions(query, top_k=5, user=request.user)
+            latency = round(time.time() - start, 2)
+        except ValueError as exc:
+            django_messages.error(request, str(exc))
+        except Exception as exc:
+            django_messages.error(request, f"Semantic search failed: {exc}")
+
+    return render(request, 'rewrites/semantic_search.html', {
+        'query': query,
+        'results': results,
+        'latency': latency,
+    })
+
+
+# =============================================================================
 # GENERATE REWRITES (LLM)
 # =============================================================================
 
@@ -1485,6 +1523,22 @@ def session_create(request):
     if request.method == 'POST':
         form = SessionCreateForm(request.POST)
         if form.is_valid():
+            original_text = form.cleaned_data['original_text'].strip()
+            # Guardrail: reject whitespace-only or very short input
+            if len(original_text) < 10:
+                django_messages.error(request, 'Text must be at least 10 characters.')
+                return render(request, 'rewrites/session_create.html', {
+                    'form': form, 'title': 'New Session',
+                })
+            # Guardrail: reject excessively long input
+            if len(original_text) > 5000:
+                django_messages.error(
+                    request,
+                    f'Text is too long ({len(original_text)} chars). Maximum is 5000 characters.',
+                )
+                return render(request, 'rewrites/session_create.html', {
+                    'form': form, 'title': 'New Session',
+                })
             session = form.save(commit=False)
             session.user = request.user
             session.session_token = secrets.token_hex(32)
