@@ -5,9 +5,6 @@
 {% block content %}
 <h2>{{ title }}</h2>
 
-<div class="view-type">
-    <strong>A4 Part 3:</strong> Reports with grouped summaries, totals, and export functionality
-</div>
 
 <!-- ==========================================================================
      TOTALS SUMMARY
@@ -211,26 +208,4 @@
     </table>
 </div>
 
-<!-- ==========================================================================
-     API ENDPOINTS FOR DATA
-     ========================================================================== -->
-<div class="card" style="background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);">
-    <h3>🔗 Data API Endpoints</h3>
-    <p class="text-muted">Access this data programmatically via JSON APIs</p>
-
-    <ul style="list-style: none; padding: 0;">
-        <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
-            <a href="{% url 'rewrites:api_summary' %}">📊 /api/summary/</a> - Aggregated summary data
-        </li>
-        <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
-            <a href="{% url 'rewrites:api_sessions' %}">📝 /api/sessions/</a> - All sessions
-        </li>
-        <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
-            <a href="{% url 'rewrites:api_contexts' %}">📁 /api/contexts/</a> - Writing contexts
-        </li>
-        <li style="padding: 0.5rem 0;">
-            <a href="{% url 'rewrites:api_tones' %}">🎨 /api/tones/</a> - Tone options
-        </li>
-    </ul>
-</div>
 {% endblock %}

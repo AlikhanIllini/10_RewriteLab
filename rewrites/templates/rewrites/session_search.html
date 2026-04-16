@@ -160,17 +160,4 @@
     {% endfor %}
 </div>
 
-<!-- ==========================================================================
-     TECHNICAL NOTES
-     ========================================================================== -->
-<div class="card" style="background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);">
-    <h3>🔧 Form Implementation Notes</h3>
-    <ul style="line-height: 2;">
-        <li><strong>GET Form:</strong> Search parameters in URL query string (shareable)</li>
-        <li><strong>POST Form:</strong> Creates new database records with CSRF protection</li>
-        <li><strong>CSRF Token:</strong> <code>{%templatetag openblock%} csrf_token {%templatetag closeblock%}</code> prevents cross-site request forgery</li>
-        <li><strong>CBV Handling:</strong> <code>SessionSearchView</code> handles both GET (queryset filtering) and POST (object creation)</li>
-        <li><strong>PRG Pattern:</strong> POST-Redirect-GET prevents form resubmission on refresh</li>
-    </ul>
-</div>
 {% endblock %}

@@ -5,11 +5,6 @@
 {% block content %}
 <h2>{{ title }}</h2>
 
-<div class="view-type">
-    <strong>View Type:</strong> {{ view_type }}
-    <br>
-    <small>This template is loaded manually using <code>loader.get_template()</code> and rendered with <code>HttpResponse</code></small>
-</div>
 
 <div class="card">
     <h2>Rewrite Sessions (Limited to 5)</h2>
@@ -39,12 +34,4 @@
     {% endfor %}
 </div>
 
-<div class="card" style="background: #f7fafc; border: 1px solid #e2e8f0;">
-    <h2>About This View</h2>
-    <p>This view demonstrates the <strong>manual approach</strong> to rendering templates:</p>
-    <pre style="background: #2d3748; color: #e2e8f0; padding: 1rem; border-radius: 4px; overflow-x: auto;">
-template = loader.get_template('rewrites/session_list_manual.html')
-context = {'sessions': sessions, ...}
-return HttpResponse(template.render(context, request))</pre>
-</div>
 {% endblock %}

@@ -147,23 +147,4 @@
     </table>
 </div>
 
-<!-- ==========================================================================
-     TECHNICAL NOTES
-     ========================================================================== -->
-<div class="card" style="background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);">
-    <h3>🔧 Technical Implementation Notes</h3>
-    <ul style="line-height: 2;">
-        <li><strong>Chart Generation:</strong> Matplotlib with non-interactive Agg backend</li>
-        <li><strong>Memory Management:</strong> BytesIO buffers for in-memory image generation</li>
-        <li><strong>Image Endpoints:</strong> Charts served directly via Django views returning PNG</li>
-        <li><strong>Data Aggregation:</strong> Django ORM with <code>annotate()</code> and <code>Count()</code></li>
-    </ul>
-
-    <h4 class="mt-2">Direct Image URLs:</h4>
-    <ul style="font-family: monospace; font-size: 0.875rem;">
-        <li><a href="{% url 'rewrites:chart_context' %}" target="_blank">/charts/sessions-by-context.png</a></li>
-        <li><a href="{% url 'rewrites:chart_tone' %}" target="_blank">/charts/sessions-by-tone.png</a></li>
-        <li><a href="{% url 'rewrites:chart_quality' %}" target="_blank">/charts/results-quality.png</a></li>
-    </ul>
-</div>
 {% endblock %}

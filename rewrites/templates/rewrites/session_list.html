@@ -5,11 +5,6 @@
 {% block content %}
 <h2>{{ title }}</h2>
 
-{% if view_type %}
-<div class="view-type">
-    <strong>View Type:</strong> {{ view_type }}
-</div>
-{% endif %}
 
 {% if completed_count is not None or context_count is not None or total_results is not None %}
 <div class="stats">
@@ -57,7 +52,6 @@
     {% for session in sessions %}
     <div class="session-item">
         <div class="text-preview">
-            <!-- Using get_absolute_url() for model-driven URLs (Section 1) -->
             <a href="{{ session.get_absolute_url }}">
                 {{ session.original_text|truncatewords:30 }}
             </a>
@@ -82,7 +76,7 @@
         {% if user.is_authenticated %}
         <a href="{% url 'rewrites:session_create' %}" class="btn btn-primary" style="margin-top: 1rem;">✨ Create Your First Session</a>
         {% else %}
-        <p><a href="{% url 'rewrites:login' %}">Log in</a> to create a session, or go to the <a href="{% url 'admin:index' %}">Admin Panel</a>.</p>
+        <p><a href="{% url 'rewrites:login' %}">Log in</a> to create a session.</p>
         {% endif %}
     </div>
     {% endfor %}

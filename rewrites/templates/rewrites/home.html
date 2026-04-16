@@ -3,21 +3,16 @@
 {% block title %}Home | RewriteLab{% endblock %}
 
 {% block content %}
-<h2>Welcome to RewriteLab</h2>
+{% if user.is_authenticated %}
+<h2>Welcome back, {{ user.username }}</h2>
 
 <p style="font-size: 1.1rem; color: #4a5568; margin-bottom: 1rem;">
-    RewriteLab helps you improve professional and academic writing by generating
-    high-quality rewrite examples of your text.
+    Pick up where you left off or start a new rewrite session.
 </p>
 
 <div style="margin-bottom: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
-    {% if user.is_authenticated %}
-    <a href="{% url 'rewrites:session_create' %}" class="btn btn-primary">✨ New Rewrite Session</a>
-    <a href="{% url 'rewrites:dashboard' %}" class="btn btn-secondary">📊 My Dashboard</a>
-    {% else %}
-    <a href="{% url 'rewrites:register' %}" class="btn btn-primary">📝 Sign Up</a>
-    <a href="{% url 'rewrites:login' %}" class="btn btn-secondary">🔐 Log In</a>
-    {% endif %}
+    <a href="{% url 'rewrites:session_create' %}" class="btn btn-primary">New Rewrite Session</a>
+    <a href="{% url 'rewrites:dashboard' %}" class="btn btn-secondary">My Dashboard</a>
 </div>
 
 <div class="stats">
@@ -35,118 +30,95 @@
     </div>
 </div>
 
-<!-- ==========================================================================
-     ASSIGNMENT 4 FEATURES (NEW)
-     ========================================================================== -->
-<div class="card" style="border: 2px solid #667eea;">
-    <h2>🆕 Assignment 4 Features</h2>
-    <p>New functionality: Vega-Lite charts, External API, Exports, and Deployment-ready</p>
+<div class="card">
+    <h2>Explore RewriteLab</h2>
+    <p style="color: #4a5568; margin-bottom: 1.5rem;">Everything you need to elevate your writing in one place.</p>
 
     <div class="grid-4">
         <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);">
-            <h3 style="color: #667eea;">📈 Vega-Lite Charts</h3>
-            <p style="font-size: 0.875rem; color: #718096;">Interactive charts from internal API data</p>
-            <a href="{% url 'rewrites:vegalite_charts' %}">View Charts →</a>
+            <h3 style="color: #667eea;">Sessions</h3>
+            <p style="font-size: 0.875rem; color: #718096;">Browse and manage your rewrite sessions</p>
+            <a href="{% url 'rewrites:session_cbv_generic' %}">View Sessions &rarr;</a>
         </div>
 
         <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);">
-            <h3 style="color: #667eea;">💡 External API</h3>
-            <p style="font-size: 0.875rem; color: #718096;">Quotes API integration (keyless)</p>
-            <a href="{% url 'rewrites:external_quotes' %}">Get Inspiration →</a>
+            <h3 style="color: #667eea;">AI Search</h3>
+            <p style="font-size: 0.875rem; color: #718096;">Find sessions by meaning, not just keywords</p>
+            <a href="{% url 'rewrites:semantic_search' %}">Try AI Search &rarr;</a>
         </div>
 
         <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);">
-            <h3 style="color: #667eea;">📋 Reports & Exports</h3>
-            <p style="font-size: 0.875rem; color: #718096;">CSV/JSON exports with summaries</p>
-            <a href="{% url 'rewrites:reports' %}">View Reports →</a>
+            <h3 style="color: #667eea;">Analytics</h3>
+            <p style="font-size: 0.875rem; color: #718096;">Visualize your writing trends and insights</p>
+            <a href="{% url 'rewrites:vegalite_charts' %}">View Charts &rarr;</a>
         </div>
 
         <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);">
-            <h3 style="color: #667eea;">🔌 Chart APIs</h3>
-            <p style="font-size: 0.875rem; color: #718096;">Clean JSON for Vega-Lite</p>
-            <a href="{% url 'rewrites:api_summary' %}">API Summary →</a>
+            <h3 style="color: #667eea;">Inspiration</h3>
+            <p style="font-size: 0.875rem; color: #718096;">Get motivated with curated writing quotes</p>
+            <a href="{% url 'rewrites:external_quotes' %}">Get Inspired &rarr;</a>
         </div>
     </div>
 </div>
 
-<!-- ==========================================================================
-     ASSIGNMENT 3 FEATURES
-     ========================================================================== -->
-<div class="card">
-    <h2>🚀 Assignment 3 Features</h2>
-    <p>Django's data-driven capabilities:</p>
+{% else %}
 
-    <div class="grid-4">
-        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
-            <h3 style="color: #667eea;">📝 Sessions</h3>
-            <p style="font-size: 0.875rem; color: #718096;">Browse all rewrite sessions with detail views</p>
-            <a href="{% url 'rewrites:session_cbv_generic' %}">View Sessions →</a>
-        </div>
-
-        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
-            <h3 style="color: #667eea;">🔍 Search</h3>
-            <p style="font-size: 0.875rem; color: #718096;">GET/POST search with ORM filters & aggregations</p>
-            <a href="{% url 'rewrites:search' %}">Search Sessions →</a>
-        </div>
-
-        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
-            <h3 style="color: #667eea;">📊 Analytics</h3>
-            <p style="font-size: 0.875rem; color: #718096;">Matplotlib charts with BytesIO image serving</p>
-            <a href="{% url 'rewrites:analytics' %}">View Analytics →</a>
-        </div>
-
-        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
-            <h3 style="color: #667eea;">🔌 API</h3>
-            <p style="font-size: 0.875rem; color: #718096;">JSON API endpoints with filtering support</p>
-            <a href="{% url 'rewrites:api_sessions' %}">Browse API →</a>
-        </div>
+<!-- Hero Section -->
+<div style="text-align: center; padding: 3rem 1rem 2rem;">
+    <h2 style="font-size: 2.5rem; font-weight: 700; color: #2d3748; margin-bottom: 1rem; line-height: 1.2;">
+        Write better.<br>Rewrite smarter.
+    </h2>
+    <p style="font-size: 1.25rem; color: #718096; max-width: 600px; margin: 0 auto 2rem; line-height: 1.6;">
+        RewriteLab uses AI to transform your writing into polished, professional text.
+        Choose your tone, context, and audience &mdash; and get multiple rewrite options in seconds.
+    </p>
+    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <a href="{% url 'rewrites:register' %}" class="btn btn-primary" style="padding: 1rem 2.5rem; font-size: 1.1rem;">Get Started Free</a>
+        <a href="{% url 'rewrites:login' %}" class="btn btn-secondary" style="padding: 1rem 2.5rem; font-size: 1.1rem;">Log In</a>
     </div>
 </div>
 
-<div class="card">
-    <h2>📋 Quick Links</h2>
-    <div class="grid-2">
-        <div>
-            <h3>Data & Reports</h3>
-            <ul style="list-style: none; padding: 0;">
-                <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
-                    <a href="{% url 'rewrites:reports' %}">📋 Reports & Exports</a>
-                </li>
-                <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
-                    <a href="{% url 'rewrites:export_sessions_csv' %}">📄 Export Sessions (CSV)</a>
-                </li>
-                <li style="padding: 0.5rem 0;">
-                    <a href="{% url 'rewrites:export_sessions_json' %}">📋 Export Sessions (JSON)</a>
-                </li>
-            </ul>
-        </div>
-        <div>
-            <h3>API Endpoints</h3>
-            <ul style="list-style: none; padding: 0;">
-                <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
-                    <a href="{% url 'rewrites:api_summary' %}">📊 /api/summary/</a> (Vega-Lite ready)
-                </li>
-                <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
-                    <a href="{% url 'rewrites:api_chart_context' %}">📈 /api/chart/context/</a>
-                </li>
-                <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
-                    <a href="{% url 'rewrites:api_chart_timeline' %}">📉 /api/chart/timeline/</a>
-                </li>
-                <li style="padding: 0.5rem 0;">
-                    <a href="{% url 'rewrites:api_external_quotes' %}?q=wisdom">🌐 /api/external/quotes/</a>
-                </li>
-            </ul>
-        </div>
+<!-- Features Section -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin: 2rem 0;">
+    <div class="card" style="text-align: center; padding: 2rem;">
+        <div style="font-size: 2.5rem; margin-bottom: 1rem;">&#9997;&#65039;</div>
+        <h3 style="border: none; padding: 0; margin-bottom: 0.5rem;">AI-Powered Rewrites</h3>
+        <p style="color: #718096; margin: 0;">Paste your text and get multiple polished versions tailored to your context, tone, and audience.</p>
+    </div>
+
+    <div class="card" style="text-align: center; padding: 2rem;">
+        <div style="font-size: 2.5rem; margin-bottom: 1rem;">&#129504;</div>
+        <h3 style="border: none; padding: 0; margin-bottom: 0.5rem;">Semantic Search</h3>
+        <p style="color: #718096; margin: 0;">Find past rewrites by meaning, not just keywords. Describe what you need in plain language.</p>
+    </div>
+
+    <div class="card" style="text-align: center; padding: 2rem;">
+        <div style="font-size: 2.5rem; margin-bottom: 1rem;">&#128200;</div>
+        <h3 style="border: none; padding: 0; margin-bottom: 0.5rem;">Writing Analytics</h3>
+        <p style="color: #718096; margin: 0;">Track your writing habits with interactive charts and detailed breakdowns by context and tone.</p>
     </div>
 </div>
 
-<div class="card" style="background: #f7fafc;">
-    <h2>🔐 Admin Access</h2>
-    <ul style="list-style: none; padding: 0;">
-        <li style="padding: 0.5rem 0;">
-            <a href="{% url 'admin:index' %}">Django Admin Panel</a>
-            <span style="font-size: 0.875rem; color: #718096;"> (tester / uiuc12345)</span>
-        </li>
-    </ul>
+<!-- Social Proof / Use Cases -->
+<div style="text-align: center; padding: 2rem 0; margin-bottom: 1rem;">
+    <p style="font-size: 1rem; color: #a0aec0; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 1.5rem;">Built for</p>
+    <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; color: #4a5568; font-size: 1.05rem; font-weight: 500;">
+        <span>Professional Emails</span>
+        <span style="color: #e2e8f0;">|</span>
+        <span>Academic Papers</span>
+        <span style="color: #e2e8f0;">|</span>
+        <span>Business Proposals</span>
+        <span style="color: #e2e8f0;">|</span>
+        <span>Creative Writing</span>
+    </div>
 </div>
+
+<!-- CTA -->
+<div style="text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 3rem 2rem; margin-bottom: 1rem;">
+    <h3 style="color: white; font-size: 1.5rem; margin-bottom: 0.75rem; border: none; padding: 0;">Ready to level up your writing?</h3>
+    <p style="color: rgba(255,255,255,0.85); margin-bottom: 1.5rem;">Create a free account and start rewriting in seconds.</p>
+    <a href="{% url 'rewrites:register' %}" class="btn" style="background: white; color: #667eea; font-weight: 700; padding: 0.9rem 2.5rem; font-size: 1.05rem;">Sign Up Now</a>
+</div>
+
+{% endif %}
 {% endblock %}

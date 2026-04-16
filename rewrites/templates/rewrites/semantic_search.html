@@ -5,9 +5,6 @@
 {% block content %}
 <h2>AI Semantic Search</h2>
 
-<div class="view-type">
-    <strong>Powered by:</strong> sentence-transformers/all-MiniLM-L6-v2 (384-dim embeddings from A8)
-</div>
 
 {% if messages %}
 <div style="margin-bottom: 1rem;">
@@ -25,9 +22,7 @@
 <div class="card">
     <h3>Search by Meaning</h3>
     <p style="color: #718096; margin-bottom: 1rem;">
-        Unlike keyword search, semantic search finds sessions with similar <em>meaning</em>,
-        even if the exact words don't match. For example, searching "apology to manager"
-        will find sessions about saying sorry to a boss.
+        Find sessions by meaning, not just keywords. Describe what you're looking for in natural language.
     </p>
 
     <form method="GET" action="{% url 'rewrites:semantic_search' %}">
@@ -85,21 +80,6 @@
     {% endfor %}
 </div>
 {% endif %}
-
-<div class="card" style="background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);">
-    <h3>How It Works</h3>
-    <p style="color: #4a5568; line-height: 1.6;">
-        <strong>1.</strong> Your query is converted into a 384-dimensional vector using the
-        <code>all-MiniLM-L6-v2</code> embedding model.<br>
-        <strong>2.</strong> All session texts (originals + rewrites) are also embedded.<br>
-        <strong>3.</strong> Cosine similarity is computed between your query and each text.<br>
-        <strong>4.</strong> The top matches are returned, deduplicated by session.
-    </p>
-    <p style="color: #718096; font-size: 0.85rem; margin-top: 0.5rem;">
-        This approach was evaluated in Assignment 8 across three embedding models and three chunking strategies.
-        <code>all-MiniLM-L6-v2</code> was selected for its strong balance of speed and retrieval quality.
-    </p>
-</div>
 
 <p style="margin-top: 1rem;">
     <a href="{% url 'rewrites:search' %}" class="btn btn-secondary">Keyword Search</a>

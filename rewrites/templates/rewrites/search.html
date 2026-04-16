@@ -27,8 +27,7 @@
      Shareable URL - query params visible in URL
      ========================================================================== -->
 <div class="search-section">
-    <h3>🔍 Text Search (GET Method)</h3>
-    <p class="text-muted mb-2">Search results are shareable via URL. Try searching and sharing the link!</p>
+    <h3>🔍 Text Search</h3>
 
     <form method="GET" action="{% url 'rewrites:search' %}" class="form-inline">
         <div class="form-group">
@@ -42,11 +41,6 @@
         {% endif %}
     </form>
 
-    {% if get_query %}
-    <p class="form-help mt-2">
-        <strong>Current URL:</strong> <code>{{ request.get_full_path }}</code>
-    </p>
-    {% endif %}
 </div>
 
 <!-- ==========================================================================
@@ -54,8 +48,7 @@
      Non-shareable - filter data hidden in POST body
      ========================================================================== -->
 <div class="search-section">
-    <h3>🎛️ Advanced Filters (POST Method)</h3>
-    <p class="text-muted mb-2">Filter data is not visible in URL - useful for hiding filter parameters.</p>
+    <h3>🎛️ Advanced Filters</h3>
 
     <form method="POST" action="{% url 'rewrites:search' %}" class="form-inline">
         {% csrf_token %}
@@ -146,7 +139,6 @@
     {% for session in sessions %}
     <div class="session-item">
         <div class="text-preview">
-            <!-- Using get_absolute_url() instead of manually building URL -->
             <a href="{{ session.get_absolute_url }}">
                 {{ session.original_text|truncatewords:30 }}
             </a>

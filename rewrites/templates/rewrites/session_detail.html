@@ -18,9 +18,6 @@
 </div>
 {% endif %}
 
-<div class="view-type">
-    <strong>URL Pattern:</strong> /sessions/{{ session.pk }}/ (Detail page with primary key)
-</div>
 
 <div class="card">
     <h3>Session Information</h3>
@@ -118,14 +115,6 @@
     {% endfor %}
 </div>
 
-<div class="card" style="background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);">
-    <h3>🔧 API Access</h3>
-    <p>You can also access this session data via the JSON API:</p>
-    <div class="api-endpoint">
-        <span class="api-method">GET</span>
-        <a href="{% url 'rewrites:api_session_detail' session.pk %}">/api/sessions/{{ session.pk }}/</a>
-    </div>
-</div>
 
 <p style="margin-top: 1rem;">
     <a href="{% url 'rewrites:session_cbv_generic' %}" class="btn btn-secondary">← Back to Session List</a>

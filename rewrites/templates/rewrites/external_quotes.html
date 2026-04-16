@@ -5,16 +5,13 @@
 {% block content %}
 <h2>{{ title }}</h2>
 
-<div class="view-type">
-    <strong>A4 Part 2:</strong> External API Integration (ZenQuotes API - keyless)
-</div>
 
 <!-- ==========================================================================
      SEARCH FORM
      ========================================================================== -->
 <div class="search-section">
     <h3>🔍 Get Writing Inspiration</h3>
-    <p class="text-muted mb-2">Get inspirational quotes to motivate your writing. Uses the ZenQuotes API.</p>
+    <p class="text-muted mb-2">Get inspirational quotes to motivate your writing.</p>
 
     <form method="GET" action="{% url 'rewrites:external_quotes' %}" class="form-inline">
         <div class="form-group">
@@ -67,8 +64,7 @@
      COMBINED WITH INTERNAL DATA
      ========================================================================== -->
 <div class="card">
-    <h3>📝 Your Recent Sessions (Internal Data)</h3>
-    <p class="text-muted">Demonstrating triangulation of external + internal data</p>
+    <h3>📝 Your Recent Sessions</h3>
 
     <div class="stats" style="margin: 1rem 0;">
         <div class="stat-card">
@@ -97,22 +93,4 @@
     {% endfor %}
 </div>
 
-<!-- ==========================================================================
-     API ENDPOINT INFO
-     ========================================================================== -->
-<div class="card" style="background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);">
-    <h3>🔧 Technical Implementation</h3>
-    <ul style="line-height: 2;">
-        <li><strong>External API:</strong> <a href="https://zenquotes.io" target="_blank">ZenQuotes API</a> (no API key required)</li>
-        <li><strong>Request Method:</strong> <code>requests.get()</code> with <code>timeout=5</code></li>
-        <li><strong>Error Handling:</strong> <code>.raise_for_status()</code> with try/except</li>
-        <li><strong>Combined API:</strong> <a href="{% url 'rewrites:api_external_quotes' %}?q={{ query }}">JSON endpoint</a> merges external + internal data</li>
-    </ul>
-
-    <h4 class="mt-2">API Endpoint:</h4>
-    <div class="api-endpoint">
-        <span class="api-method">GET</span>
-        <a href="{% url 'rewrites:api_external_quotes' %}?q={{ query }}">/api/external/quotes/?q={{ query }}</a>
-    </div>
-</div>
 {% endblock %}
