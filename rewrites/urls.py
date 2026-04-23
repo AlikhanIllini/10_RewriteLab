@@ -116,4 +116,18 @@ urlpatterns = [
     # A4 PART 3: REPORTS PAGE
     # ==========================================================================
     path('reports/', views.reports, name='reports'),
+
+    # ==========================================================================
+    # A10: AI ANALYTICS DASHBOARD
+    # ==========================================================================
+    path('analytics-dashboard/', views.analytics_dashboard, name='analytics_dashboard'),
+    path('api/a10/latency-distribution/', views.api_a10_latency_distribution, name='a10_latency_distribution'),
+    path('api/a10/latency-by-feature/', views.api_a10_latency_by_feature, name='a10_latency_by_feature'),
+    path('api/a10/calls-over-time/', views.api_a10_calls_over_time, name='a10_calls_over_time'),
+    path('api/a10/feature-usage/', views.api_a10_feature_usage, name='a10_feature_usage'),
+    path('api/a10/status-breakdown/', views.api_a10_status_breakdown, name='a10_status_breakdown'),
+    path('api/a10/input-size-distribution/', views.api_a10_input_size_distribution, name='a10_input_size_distribution'),
+    path('api/a10/cost-by-feature/', views.api_a10_cost_by_feature, name='a10_cost_by_feature'),
+    path('api/a10/cost-over-time/', views.api_a10_cost_over_time, name='a10_cost_over_time'),
+    path('api/a10/top-cost-users/', views.api_a10_top_cost_users, name='a10_top_cost_users'),
 ]

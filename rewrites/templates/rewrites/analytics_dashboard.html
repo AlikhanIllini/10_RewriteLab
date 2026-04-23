@@ -1,0 +1,377 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}AI Analytics Dashboard - RewriteLab{% endblock %}
+
+{% block extra_css %}
+<style>
+  .dash-section { margin: 2rem 0; }
+  .dash-section h2 {
+    border-left: 4px solid #667eea;
+    padding-left: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .kpi-card {
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .kpi-card .label {
+    font-size: 0.75rem;
+    color: #718096;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .kpi-card .value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin-top: 0.25rem;
+  }
+  .kpi-card .sub {
+    font-size: 0.75rem;
+    color: #a0aec0;
+    margin-top: 0.25rem;
+  }
+  .chart-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+    gap: 1.25rem;
+  }
+  .chart-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .chart-card h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    color: #2d3748;
+  }
+  .chart-card > div[id^="chart-"] {
+    min-height: 240px;
+    width: 100%;
+    overflow-x: auto;
+  }
+  .chart-card .chart-desc {
+    font-size: 0.8rem;
+    color: #718096;
+    margin-bottom: 0.75rem;
+  }
+  table.top-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  table.top-table th, table.top-table td {
+    text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid #edf2f7;
+  }
+  table.top-table th { background: #f7fafc; color: #4a5568; }
+  .category-pill {
+    display: inline-block; font-size: 0.75rem; font-weight: 600;
+    padding: 0.15rem 0.5rem; border-radius: 999px; margin-left: 0.5rem;
+    vertical-align: middle;
+  }
+  .pill-perf { background: #ebf8ff; color: #2b6cb0; }
+  .pill-behavior { background: #f0fff4; color: #276749; }
+  .pill-cost { background: #fffaf0; color: #9c4221; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dash-container">
+  <h1 style="margin-bottom: 0.25rem;">📊 AI Analytics Dashboard</h1>
+  <p style="color: #718096; margin-top: 0;">
+    Real-time monitoring of RewriteLab's AI system: performance, user behavior, and cost.
+  </p>
+
+  <!-- ===== TOP KPI STRIP ===== -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="label">Total AI Calls</div>
+      <div class="value">{{ total_calls }}</div>
+      <div class="sub">all features, all time</div>
+    </div>
+    <div class="kpi-card">
+      <div class="label">Success Rate</div>
+      <div class="value">{{ success_rate }}%</div>
+      <div class="sub">successful / total</div>
+    </div>
+    <div class="kpi-card">
+      <div class="label">Avg Latency</div>
+      <div class="value">{{ avg_latency_ms }} ms</div>
+      <div class="sub">p50: {{ p50_latency_ms }} / p95: {{ p95_latency_ms }} / p99: {{ p99_latency_ms }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="label">Total Cost</div>
+      <div class="value">${{ total_cost_usd }}</div>
+      <div class="sub">avg ${{ avg_cost_per_call }} / call</div>
+    </div>
+    <div class="kpi-card">
+      <div class="label">Total Tokens</div>
+      <div class="value">{{ total_tokens }}</div>
+      <div class="sub">prompt + completion</div>
+    </div>
+  </div>
+
+  <!-- ===== SYSTEM PERFORMANCE ===== -->
+  <div class="dash-section">
+    <h2>System Performance <span class="category-pill pill-perf">PERFORMANCE</span></h2>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>Latency Distribution</h3>
+        <div class="chart-desc">Histogram of response times across all successful AI calls. Shows how consistent latency is.</div>
+        <div id="chart-latency-dist"></div>
+      </div>
+      <div class="chart-card">
+        <h3>Average Latency by Feature</h3>
+        <div class="chart-desc">Which AI feature is slowest? Compares mean latency across LLM, local model, and semantic search.</div>
+        <div id="chart-latency-by-feature"></div>
+      </div>
+      <div class="chart-card">
+        <h3>Call Status Breakdown</h3>
+        <div class="chart-desc">Success vs. error vs. timeout. Surfaces reliability issues.</div>
+        <div id="chart-status"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== USER BEHAVIOR ===== -->
+  <div class="dash-section">
+    <h2>User Behavior <span class="category-pill pill-behavior">BEHAVIOR</span></h2>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>Feature Usage</h3>
+        <div class="chart-desc">Which AI features do users use most? Reveals adoption patterns.</div>
+        <div id="chart-feature-usage"></div>
+      </div>
+      <div class="chart-card">
+        <h3>Calls Over Time (by Feature)</h3>
+        <div class="chart-desc">Daily call volume trend. Spot growth, spikes, or adoption drops.</div>
+        <div id="chart-calls-over-time"></div>
+      </div>
+      <div class="chart-card">
+        <h3>Input Size Distribution</h3>
+        <div class="chart-desc">How long are the texts users submit? Informs prompt / model sizing.</div>
+        <div id="chart-input-size"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== COST ===== -->
+  <div class="dash-section">
+    <h2>Cost <span class="category-pill pill-cost">COST</span></h2>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>Cost by Feature</h3>
+        <div class="chart-desc">Total USD cost per AI feature. Local/semantic are near-zero (self-hosted).</div>
+        <div id="chart-cost-by-feature"></div>
+      </div>
+      <div class="chart-card">
+        <h3>Daily Cost Trend</h3>
+        <div class="chart-desc">Cost over time. Detect spending spikes early.</div>
+        <div id="chart-cost-over-time"></div>
+      </div>
+      <div class="chart-card">
+        <h3>Top 10 Users by Cost</h3>
+        <div class="chart-desc">Identify heavy users and cost drivers.</div>
+        <div id="top-cost-users">Loading...</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  if (typeof vegaEmbed !== 'function') {
+    console.error('vegaEmbed not loaded — CDN blocked?');
+    document.querySelectorAll('[id^="chart-"]').forEach(el => {
+      el.innerHTML = '<em style="color:#c53030">Vega-Lite failed to load (CDN blocked).</em>';
+    });
+    return;
+  }
+
+  const SCHEMA = 'https://vega.github.io/schema/vega-lite/v5.json';
+  const W = 460;
+  const H = 240;
+
+  const endpoints = {
+    latencyDist:      "{% url 'rewrites:a10_latency_distribution' %}",
+    latencyByFeature: "{% url 'rewrites:a10_latency_by_feature' %}",
+    callsOverTime:    "{% url 'rewrites:a10_calls_over_time' %}",
+    featureUsage:     "{% url 'rewrites:a10_feature_usage' %}",
+    statusBreakdown:  "{% url 'rewrites:a10_status_breakdown' %}",
+    inputSize:        "{% url 'rewrites:a10_input_size_distribution' %}",
+    costByFeature:    "{% url 'rewrites:a10_cost_by_feature' %}",
+    costOverTime:     "{% url 'rewrites:a10_cost_over_time' %}",
+    topCostUsers:     "{% url 'rewrites:a10_top_cost_users' %}",
+  };
+
+  function fetchJSON(url) {
+    return fetch(url, { credentials: 'same-origin' }).then(r => {
+      if (!r.ok) throw new Error(url + ' -> ' + r.status);
+      return r.json();
+    });
+  }
+
+  function render(selector, specFn, url) {
+    fetchJSON(url).then(values => {
+      if (!values || (Array.isArray(values) && values.length === 0)) {
+        const el = document.querySelector(selector);
+        if (el) el.innerHTML = '<em style="color:#718096">No data yet.</em>';
+        return;
+      }
+      const spec = specFn(values);
+      vegaEmbed(selector, spec, { actions: false, renderer: 'svg' })
+        .catch(err => {
+          console.error('vegaEmbed error on ' + selector, err);
+          const el = document.querySelector(selector);
+          if (el) el.innerHTML = '<em style="color:#c53030">Chart error: ' + err.message + '</em>';
+        });
+    }).catch(err => {
+      console.error('fetch error on ' + url, err);
+      const el = document.querySelector(selector);
+      if (el) el.innerHTML = '<em style="color:#c53030">Data error: ' + err.message + '</em>';
+    });
+  }
+
+  // ---------- SYSTEM PERFORMANCE ----------
+  render('#chart-latency-dist', values => ({
+    $schema: SCHEMA, width: W, height: H,
+    data: { values: values },
+    mark: { type: 'bar', color: '#667eea' },
+    encoding: {
+      x: { field: 'bucket', type: 'ordinal', sort: { field: 'lo' },
+           axis: { labelAngle: -35, title: 'Latency bucket' } },
+      y: { field: 'count', type: 'quantitative', title: 'Calls' },
+      tooltip: [{ field: 'bucket' }, { field: 'count' }],
+    },
+  }), endpoints.latencyDist);
+
+  render('#chart-latency-by-feature', values => ({
+    $schema: SCHEMA, width: W, height: H,
+    data: { values: values },
+    mark: 'bar',
+    encoding: {
+      y: { field: 'feature', type: 'nominal', title: null, sort: '-x' },
+      x: { field: 'avg_latency_ms', type: 'quantitative', title: 'Avg latency (ms)' },
+      color: { field: 'feature', legend: null },
+      tooltip: [{ field: 'feature' }, { field: 'avg_latency_ms', title: 'avg ms' }, { field: 'calls' }],
+    },
+  }), endpoints.latencyByFeature);
+
+  render('#chart-status', values => ({
+    $schema: SCHEMA, width: W, height: H,
+    data: { values: values },
+    mark: { type: 'arc', innerRadius: 50 },
+    encoding: {
+      theta: { field: 'count', type: 'quantitative' },
+      color: {
+        field: 'status', type: 'nominal',
+        scale: { domain: ['success', 'error', 'timeout'],
+                 range: ['#48bb78', '#f56565', '#ed8936'] },
+      },
+      tooltip: [{ field: 'status' }, { field: 'count' }],
+    },
+  }), endpoints.statusBreakdown);
+
+  // ---------- USER BEHAVIOR ----------
+  render('#chart-feature-usage', values => ({
+    $schema: SCHEMA, width: W, height: H,
+    data: { values: values },
+    mark: 'bar',
+    encoding: {
+      x: { field: 'feature', type: 'nominal', axis: { labelAngle: -25 } },
+      y: { field: 'calls', type: 'quantitative' },
+      color: { field: 'feature', legend: null },
+      tooltip: [{ field: 'feature' }, { field: 'calls' }],
+    },
+  }), endpoints.featureUsage);
+
+  render('#chart-calls-over-time', values => ({
+    $schema: SCHEMA, width: W, height: H,
+    data: { values: values },
+    mark: { type: 'line', point: true },
+    encoding: {
+      x: { field: 'date', type: 'temporal', title: 'Date' },
+      y: { field: 'calls', type: 'quantitative', title: 'Calls' },
+      color: { field: 'feature', type: 'nominal' },
+      tooltip: [{ field: 'date', type: 'temporal' }, { field: 'feature' }, { field: 'calls' }],
+    },
+  }), endpoints.callsOverTime);
+
+  render('#chart-input-size', values => ({
+    $schema: SCHEMA, width: W, height: H,
+    data: { values: values },
+    mark: { type: 'bar', color: '#48bb78' },
+    encoding: {
+      x: { field: 'bucket', type: 'ordinal', sort: { field: 'lo' },
+           axis: { labelAngle: -25, title: 'Input chars' } },
+      y: { field: 'count', type: 'quantitative', title: 'Calls' },
+      tooltip: [{ field: 'bucket' }, { field: 'count' }],
+    },
+  }), endpoints.inputSize);
+
+  // ---------- COST ----------
+  render('#chart-cost-by-feature', values => ({
+    $schema: SCHEMA, width: W, height: H,
+    data: { values: values },
+    mark: 'bar',
+    encoding: {
+      x: { field: 'feature', type: 'nominal', axis: { labelAngle: -25 } },
+      y: { field: 'total_cost_usd', type: 'quantitative', title: 'Total cost (USD)' },
+      color: { field: 'feature', legend: null,
+               scale: { range: ['#ed8936', '#667eea', '#48bb78'] } },
+      tooltip: [
+        { field: 'feature' },
+        { field: 'total_cost_usd', title: 'USD' },
+        { field: 'total_tokens' },
+        { field: 'calls' },
+      ],
+    },
+  }), endpoints.costByFeature);
+
+  render('#chart-cost-over-time', values => ({
+    $schema: SCHEMA, width: W, height: H,
+    data: { values: values },
+    mark: { type: 'area', line: true, color: '#ed8936', opacity: 0.5 },
+    encoding: {
+      x: { field: 'date', type: 'temporal', title: 'Date' },
+      y: { field: 'cost_usd', type: 'quantitative', title: 'USD / day' },
+      tooltip: [{ field: 'date', type: 'temporal' }, { field: 'cost_usd' }],
+    },
+  }), endpoints.costOverTime);
+
+  // Top users — render as table
+  fetchJSON(endpoints.topCostUsers).then(rows => {
+    const el = document.getElementById('top-cost-users');
+    if (!rows.length) { el.innerHTML = '<em>No user-attributed calls yet.</em>'; return; }
+    let html = '<table class="top-table"><thead><tr>' +
+      '<th>#</th><th>User</th><th style="text-align:right">Cost (USD)</th><th style="text-align:right">Calls</th>' +
+      '</tr></thead><tbody>';
+    rows.forEach((r, i) => {
+      html += '<tr><td>' + (i+1) + '</td><td>' + r.username + '</td>' +
+              '<td style="text-align:right">$' + r.total_cost_usd.toFixed(6) + '</td>' +
+              '<td style="text-align:right">' + r.calls + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+  }).catch(err => {
+    console.error('top users error', err);
+    const el = document.getElementById('top-cost-users');
+    if (el) el.innerHTML = '<em style="color:#c53030">Error: ' + err.message + '</em>';
+  });
+});
+</script>
+{% endblock %}

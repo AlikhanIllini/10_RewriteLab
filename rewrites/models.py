@@ -241,3 +241,103 @@ class RewriteResult(models.Model):
 
     def __str__(self):
         return f"{self.session.session_token[:8]} - Version {self.version_label}"
+
+
+class AICallLog(models.Model):
+    """
+    Telemetry record for a single AI feature invocation.
+
+    Captures metrics needed for the A10 analytics dashboard:
+    - System performance: latency, status
+    - User behavior: feature used, user, input size
+    - Cost: prompt/completion tokens and estimated USD cost
+
+    Rows are created by a post_save signal on RewriteResult (derived metrics
+    for real traffic) and by the `seed_ai_logs` management command
+    (simulated data for demo purposes).
+    """
+
+    FEATURE_CHOICES = [
+        ('llm_rewrite', 'LLM Rewrite (API)'),
+        ('local_rewrite', 'Local Rewrite (HF)'),
+        ('semantic_search', 'Semantic Search'),
+    ]
+
+    STATUS_CHOICES = [
+        ('success', 'Success'),
+        ('error', 'Error'),
+        ('timeout', 'Timeout'),
+    ]
+
+    feature = models.CharField(
+        max_length=32,
+        choices=FEATURE_CHOICES,
+        help_text="Which AI feature was invoked"
+    )
+    model_name = models.CharField(
+        max_length=64,
+        default='',
+        blank=True,
+        help_text="Underlying model (e.g., gpt-4.1-mini, Qwen2.5-0.5B, MiniLM)"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='ai_call_logs',
+        help_text="User who triggered the call (null for anonymous)"
+    )
+    session = models.ForeignKey(
+        RewriteSession,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='ai_call_logs',
+        help_text="Related session (if applicable)"
+    )
+    latency_ms = models.PositiveIntegerField(
+        default=0,
+        help_text="End-to-end latency in milliseconds"
+    )
+    input_chars = models.PositiveIntegerField(
+        default=0,
+        help_text="Character count of the input text/query"
+    )
+    prompt_tokens = models.PositiveIntegerField(
+        default=0,
+        help_text="Approximate prompt/input tokens"
+    )
+    completion_tokens = models.PositiveIntegerField(
+        default=0,
+        help_text="Approximate completion/output tokens"
+    )
+    cost_usd = models.DecimalField(
+        max_digits=10,
+        decimal_places=6,
+        default=0,
+        help_text="Estimated cost in USD"
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=STATUS_CHOICES,
+        default='success',
+        help_text="Outcome of the call"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "AI Call Log"
+        verbose_name_plural = "AI Call Logs"
+        indexes = [
+            models.Index(fields=['feature', 'created_at']),
+            models.Index(fields=['user', 'created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.feature} [{self.status}] {self.latency_ms}ms @ {self.created_at:%Y-%m-%d %H:%M}"
+
+    @property
+    def total_tokens(self) -> int:
+        return self.prompt_tokens + self.completion_tokens

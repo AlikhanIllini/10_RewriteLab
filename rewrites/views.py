@@ -1693,4 +1693,228 @@ def tone_create(request):
     })
 
 
+# =============================================================================
+# A10: AI SYSTEM ANALYTICS DASHBOARD
+# =============================================================================
+# Monitors the AI system across three categories:
+#   1. System Performance  - latency, success rate, per-feature breakdown
+#   2. User Behavior       - feature usage, top users, input size patterns
+#   3. Cost                - total/avg cost, token usage, cost drivers
+#
+# Data source: AICallLog model, populated via (a) post_save signal on
+# RewriteResult for real traffic, and (b) seed_ai_logs management command
+# for simulated demo data.
+# =============================================================================
+
+from .models import AICallLog  # noqa: E402  (grouped with A10 block)
+
+
+def _percentile(sorted_values, p):
+    """Compute percentile from a sorted list (0 <= p <= 100)."""
+    if not sorted_values:
+        return 0
+    k = (len(sorted_values) - 1) * p / 100
+    f = int(k)
+    c = min(f + 1, len(sorted_values) - 1)
+    if f == c:
+        return sorted_values[f]
+    return sorted_values[f] + (sorted_values[c] - sorted_values[f]) * (k - f)
+
+
+@login_required(login_url='rewrites:login')
+def analytics_dashboard(request):
+    """
+    A10 dashboard page. Renders a template that hydrates itself via the
+    /api/a10/* JSON endpoints using Vega-Lite.
+    """
+    total_calls = AICallLog.objects.count()
+    success_calls = AICallLog.objects.filter(status='success').count()
+    success_rate = (success_calls / total_calls * 100) if total_calls else 0
+
+    latencies = list(
+        AICallLog.objects.filter(status='success')
+        .values_list('latency_ms', flat=True)
+    )
+    latencies.sort()
+
+    total_cost = sum(
+        float(c) for c in AICallLog.objects.values_list('cost_usd', flat=True)
+    )
+    total_tokens = sum(
+        (p or 0) + (co or 0)
+        for p, co in AICallLog.objects.values_list('prompt_tokens', 'completion_tokens')
+    )
+
+    context = {
+        'title': 'AI Analytics Dashboard',
+        'total_calls': total_calls,
+        'success_rate': round(success_rate, 1),
+        'avg_latency_ms': int(sum(latencies) / len(latencies)) if latencies else 0,
+        'p50_latency_ms': int(_percentile(latencies, 50)),
+        'p95_latency_ms': int(_percentile(latencies, 95)),
+        'p99_latency_ms': int(_percentile(latencies, 99)),
+        'total_cost_usd': round(total_cost, 4),
+        'total_tokens': total_tokens,
+        'avg_cost_per_call': round(total_cost / total_calls, 6) if total_calls else 0,
+    }
+    return render(request, 'rewrites/analytics_dashboard.html', context)
+
+
+@api_login_required
+def api_a10_latency_distribution(request):
+    """Histogram buckets of latency_ms for successful calls."""
+    buckets = [
+        (0, 100), (100, 250), (250, 500), (500, 1000),
+        (1000, 2000), (2000, 3000), (3000, 5000), (5000, 10000),
+        (10000, 10**9),
+    ]
+    data = []
+    for lo, hi in buckets:
+        count = AICallLog.objects.filter(
+            status='success', latency_ms__gte=lo, latency_ms__lt=hi,
+        ).count()
+        label = f"{lo}-{hi}ms" if hi < 10**9 else f"{lo}ms+"
+        data.append({'bucket': label, 'count': count, 'lo': lo})
+    return JsonResponse(data, safe=False)
+
+
+@api_login_required
+def api_a10_latency_by_feature(request):
+    """Average latency per AI feature."""
+    data = (
+        AICallLog.objects.filter(status='success')
+        .values('feature')
+        .annotate(avg_latency=Avg('latency_ms'), n=Count('id'))
+        .order_by('-avg_latency')
+    )
+    return JsonResponse([
+        {
+            'feature': item['feature'],
+            'avg_latency_ms': round(item['avg_latency'] or 0, 1),
+            'calls': item['n'],
+        }
+        for item in data
+    ], safe=False)
+
+
+@api_login_required
+def api_a10_calls_over_time(request):
+    """Call volume per day, split by feature."""
+    data = (
+        AICallLog.objects.extra(select={'date': 'date(created_at)'})
+        .values('date', 'feature')
+        .annotate(count=Count('id'))
+        .order_by('date')
+    )
+    return JsonResponse([
+        {'date': str(item['date']), 'feature': item['feature'], 'calls': item['count']}
+        for item in data
+    ], safe=False)
+
+
+@api_login_required
+def api_a10_feature_usage(request):
+    """Total calls per feature (bar chart for user behavior)."""
+    data = (
+        AICallLog.objects.values('feature')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+    return JsonResponse([
+        {'feature': item['feature'], 'calls': item['count']}
+        for item in data
+    ], safe=False)
+
+
+@api_login_required
+def api_a10_status_breakdown(request):
+    """Success / error / timeout counts."""
+    data = (
+        AICallLog.objects.values('status')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+    return JsonResponse([
+        {'status': item['status'], 'count': item['count']}
+        for item in data
+    ], safe=False)
+
+
+@api_login_required
+def api_a10_input_size_distribution(request):
+    """Histogram of input character length (user behavior)."""
+    buckets = [
+        (0, 50), (50, 150), (150, 300), (300, 600),
+        (600, 1000), (1000, 2000), (2000, 10**9),
+    ]
+    data = []
+    for lo, hi in buckets:
+        count = AICallLog.objects.filter(
+            input_chars__gte=lo, input_chars__lt=hi
+        ).count()
+        label = f"{lo}-{hi}" if hi < 10**9 else f"{lo}+"
+        data.append({'bucket': label, 'count': count, 'lo': lo})
+    return JsonResponse(data, safe=False)
+
+
+@api_login_required
+def api_a10_cost_by_feature(request):
+    """Total cost and tokens per feature."""
+    result = []
+    for feature, _ in AICallLog.FEATURE_CHOICES:
+        qs = AICallLog.objects.filter(feature=feature)
+        total_cost = sum(float(c) for c in qs.values_list('cost_usd', flat=True))
+        total_tokens = sum(
+            (p or 0) + (co or 0)
+            for p, co in qs.values_list('prompt_tokens', 'completion_tokens')
+        )
+        result.append({
+            'feature': feature,
+            'total_cost_usd': round(total_cost, 4),
+            'total_tokens': total_tokens,
+            'calls': qs.count(),
+        })
+    return JsonResponse(result, safe=False)
+
+
+@api_login_required
+def api_a10_cost_over_time(request):
+    """Daily cost trend."""
+    data = (
+        AICallLog.objects.extra(select={'date': 'date(created_at)'})
+        .values('date')
+        .order_by('date')
+    )
+    # aggregate in Python because DecimalField + Sum in sqlite can be flaky
+    daily = {}
+    for row in AICallLog.objects.all().values('created_at', 'cost_usd'):
+        d = row['created_at'].date().isoformat()
+        daily[d] = daily.get(d, 0) + float(row['cost_usd'])
+    result = [
+        {'date': d, 'cost_usd': round(v, 6)}
+        for d, v in sorted(daily.items())
+    ]
+    return JsonResponse(result, safe=False)
+
+
+@api_login_required
+def api_a10_top_cost_users(request):
+    """Top 10 users by total cost (cost drivers)."""
+    from django.db.models import Sum
+    data = (
+        AICallLog.objects.exclude(user__isnull=True)
+        .values('user__username')
+        .annotate(total_cost=Sum('cost_usd'), calls=Count('id'))
+        .order_by('-total_cost')[:10]
+    )
+    return JsonResponse([
+        {
+            'username': item['user__username'],
+            'total_cost_usd': round(float(item['total_cost'] or 0), 6),
+            'calls': item['calls'],
+        }
+        for item in data
+    ], safe=False)
+
+
 
