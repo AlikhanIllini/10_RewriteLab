@@ -1,5 +1,7 @@
 # RewriteLab
 
+**Live site:** https://rewritelab.onrender.com
+
 RewriteLab is a web app that helps users improve professional and academic writing by generating high-quality rewrite examples of user-provided text. The core idea is "example-based rewriting": instead of grammar-only fixes or vague advice, the app produces complete alternative drafts that preserve the original meaning while improving clarity, structure, and natural tone.
 
 The app now features a fully working **AI-powered rewrite engine** using both a local Hugging Face model and an LLM API. Users can create accounts, submit their text, and receive rewrite versions scored for quality. The app also includes **AI-powered semantic search** over past sessions using sentence-transformer embeddings. Sessions are owned by users, with full create/edit/delete capabilities and a personal dashboard.
